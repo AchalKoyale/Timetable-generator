@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Top Welcome Banner -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold text-navy m-0">Dashboard Overview</h3>
+            <p class="text-muted small m-0">Department of Electronics & Telecommunication Engineering &bull; Sem-I 2026-27</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('timetable_master') }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="fas fa-table me-1"></i> Open Timetable Grid
+            </a>
+            <a href="{{ url_for('export_pdf') }}" class="btn btn-outline-danger btn-sm shadow-sm">
+                <i class="fas fa-file-pdf me-1"></i> Download PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-2">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">Faculty</div>
+                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.teachers }}</h3>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-2">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">Classes</div>
+                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.classes }}</h3>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-2">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">Subjects</div>
+                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.subjects }}</h3>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-2">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">Rooms / Labs</div>
+                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.rooms }}</h3>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-2">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">Periods</div>
+                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.entries }}</h3>
+                    </div>
+                    <div class="stat-icon bg-secondary-subtle text-secondary">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-2">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">Clash Status</div>
+                        <h3 class="fw-bold m-0 mt-1 {% if stats.conflicts == 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ stats.conflicts }}
+                        </h3>
+                    </div>
+                    <div class="stat-icon {% if stats.conflicts == 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation & Features Row -->
+    <div class="row g-4 mb-4">
+        <!-- Academic Timetables Card -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold m-0 text-navy">
+                        <i class="fas fa-layer-group text-primary me-2"></i> Academic Class Schedule (3 Semesters)
+                    </h5>
+                    <a href="{{ url_for('timetable_master') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body px-4 pb-4 pt-1">
+                    <div class="row g-3">
+                        {% for c in classes %}
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-direction-column justify-content-between">
+                                <div>
+                                    <div class="badge bg-primary mb-2">{{ c.name }}</div>
+                                    <h6 class="fw-bold mb-1">{{ c.year_name }}</h6>
+                                    <p class="small text-muted mb-2">Semester {{ c.semester }} &bull; E&TC</p>
+                                    <div class="small text-secondary mb-3">
+                                        <i class="fas fa-users text-muted me-1"></i> Batches: 
+                                        {% for b in c.batches %}
+                                            <span class="badge bg-white text-dark border">{{ b.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('timetable_class', class_id=c.id) }}" class="btn btn-sm btn-outline-secondary w-100">
+                                    <i class="fas fa-external-link-alt me-1"></i> View Timetable
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Clashes -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-3 px-4">
+                    <h5 class="fw-bold m-0 text-navy">
+                        <i class="fas fa-bolt text-warning me-2"></i> Quick Controls
+                    </h5>
+                </div>
+                <div class="card-body px-4 pt-0">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('timetable_master') }}" class="btn btn-primary d-flex align-items-center justify-content-between p-3 rounded-3">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="fas fa-edit fs-5"></i>
+                                <span class="text-start">
+                                    <strong class="d-block">Interactive Grid</strong>
+                                    <small class="opacity-75">Click any cell to edit details</small>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+
+                        <form action="{{ url_for('reset_timetable') }}" method="POST" onsubmit="return confirm('Restore original PDF schedule?');">
+                            <button type="submit" class="btn btn-outline-warning text-dark w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                                <span class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-history fs-5 text-warning"></i>
+                                    <span>
+                                        <strong class="d-block">Reset to PDF Schedule</strong>
+                                        <small class="text-muted">Restore authentic MGM COE data</small>
+                                    </span>
+                                </span>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </button>
+                        </form>
+
+                        <a href="{{ url_for('conflict_report') }}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="fas fa-shield-alt fs-5 text-danger"></i>
+                                <span>
+                                    <strong class="d-block">Live Clash Auditor</strong>
+                                    <small class="text-muted">{% if stats.conflicts == 0 %}0 conflicts found{% else %}{{ stats.conflicts }} conflicts detected{% endif %}</small>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+
+                        <a href="{{ url_for('export_pdf') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="fas fa-file-pdf fs-5 text-danger"></i>
+                                <span>
+                                    <strong class="d-block">Export Official PDF</strong>
+                                    <small class="text-muted">Landscape A4 printable report</small>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

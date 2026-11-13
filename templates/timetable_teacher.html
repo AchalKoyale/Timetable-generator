@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Faculty Schedule - {{ selected_teacher.name if selected_teacher else 'Faculty View' }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="action-toolbar no-print">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="m-0 fw-bold text-navy">
+                <i class="fas fa-chalkboard-teacher text-primary me-2"></i> Faculty Schedule
+            </h5>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-primary dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown">
+                    {{ selected_teacher.code ~ ' - ' ~ selected_teacher.name if selected_teacher else 'Select Faculty' }}
+                </button>
+                <ul class="dropdown-menu shadow" style="max-height: 300px; overflow-y: auto;">
+                    {% for t in teachers %}
+                    <li><a class="dropdown-item {% if selected_teacher and selected_teacher.id == t.id %}active{% endif %}" href="{{ url_for('timetable_teacher', teacher_id=t.id) }}"><strong class="me-1">{{ t.code }}:</strong> {{ t.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <button onclick="window.print()" class="btn btn-sm btn-dark">
+            <i class="fas fa-print me-1"></i> Print Faculty Schedule
+        </button>
+    </div>
+
+    {% if selected_teacher %}
+    <div class="college-header-box">
+        <div class="college-trust">{{ setting.trust_name if setting else "Mahatma Gandhi Mission's" }}</div>
+        <div class="college-name">{{ setting.college_name if setting else "COLLEGE OF ENGINEERING, NANDED" }}</div>
+        <div class="college-dept">{{ setting.department_name }}</div>
+        <div class="h5 fw-bold text-primary mt-2">Personal Workload & Timetable: {{ selected_teacher.name }} ({{ selected_teacher.code }})</div>
+        <div class="small text-muted">{{ selected_teacher.designation }} &bull; Max Hours: {{ selected_teacher.max_weekly_hours }} hrs/week</div>
+    </div>
+
+    <div class="timetable-container">
+        <table class="table-timetable">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">DAY</th>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <th class="recess-cell" style="width: 25px;">R<br>e<br>c<br>e<br>s<br>s</th>
+                        {% else %}
+                        <th>{{ slot.slot_label }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days %}
+                <tr>
+                    <td class="day-header-cell fw-bold">{{ day[:3].upper() }}</td>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <td class="recess-cell">R<br>e<br>c<br>e<br>s<br>s</td>
+                        {% else %}
+                        <td>
+                            {% set cell_entries = grid[day][slot.id] %}
+                            <div class="tt-slot-container">
+                                {% if cell_entries and cell_entries|length > 0 %}
+                                    {% for e in cell_entries %}
+                                        <div class="tt-cell-item type-theory p-2">
+                                            <div class="badge bg-secondary mb-1">{{ e.academic_class.name }}</div>
+                                            <div class="fw-bold">{{ e.custom_title or (e.subject.code ~ ' in ' ~ (e.room.name if e.room else '')) }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

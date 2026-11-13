@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% block title %}Master Academic Timetable{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Action Floating Toolbar -->
+    <div class="action-toolbar no-print">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="m-0 fw-bold text-navy">
+                <i class="fas fa-calendar-alt text-primary me-2"></i> Master Timetable (PDF Replica)
+            </h5>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">Editable Grid</span>
+            {% if conflicts and conflicts|length > 0 %}
+            <a href="{{ url_for('conflict_report') }}" class="badge bg-danger text-white text-decoration-none">
+                <i class="fas fa-exclamation-circle me-1"></i> {{ conflicts|length }} Clash Detected
+            </a>
+            {% else %}
+            <span class="badge bg-success text-white">
+                <i class="fas fa-check-circle me-1"></i> 0 Clashes (Clash-Free)
+            </span>
+            {% endif %}
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Reset to PDF Timetable -->
+            <form action="{{ url_for('reset_timetable') }}" method="POST" onsubmit="return confirm('Reset timetable to the official PDF schedule? All manual edits will be re-aligned with the original PDF.');" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-warning text-dark" title="Restore original PDF entries">
+                    <i class="fas fa-undo me-1"></i> Reset to PDF
+                </button>
+            </form>
+
+            <!-- Regenerate using smart algorithm -->
+            <form action="{{ url_for('generate_timetable') }}" method="POST" onsubmit="return confirm('Run AI clash-free generator?');" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-primary" title="Run smart generator">
+                    <i class="fas fa-magic me-1"></i> Regenerate AI
+                </button>
+            </form>
+
+            <!-- Export CSV -->
+            <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-file-csv me-1"></i> Export CSV
+            </a>
+
+            <!-- Export PDF -->
+            <a href="{{ url_for('export_pdf') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-file-pdf me-1"></i> Export PDF
+            </a>
+
+            <!-- Browser Print -->
+            <button onclick="window.print()" class="btn btn-sm btn-dark">
+                <i class="fas fa-print me-1"></i> Print Timetable
+            </button>
+        </div>
+    </div>
+
+    <!-- Official College Timetable Sheet (Matches the PDF exactly) -->
+    <div class="college-header-box">
+        <div class="college-trust">{{ setting.trust_name if setting else "Mahatma Gandhi Mission's" }}</div>
+        <div class="college-name">{{ setting.college_name if setting else "COLLEGE OF ENGINEERING" }}</div>
+        <div class="college-address">{{ setting.address if setting else "Near Airport, Off Hingoli Road, Nanded-431605. (An Autonomous Institute, Accredited by NAAC & NBA)" }}</div>
+        <div class="college-dept">{{ setting.department_name if setting else "DEPARTMENT OF ELECTRONICS AND TELECOMMUNICATION ENGINEERING" }}</div>
+        <div class="college-meta">
+            <span>{{ setting.academic_year if setting else "ACADEMIC YEAR 2026-27 (SEMESTER-I) TIME TABLE" }}</span>
+            <span>Sem Start on: <strong>{{ setting.sem_start_date if setting else "10/08/2026" }}</strong></span>
+            <span>WEF: <strong>{{ setting.wef_date if setting else "17/08/2026" }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Master Timetable Grid -->
+    <div class="timetable-container">
+        <table class="table-timetable">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">DAY/ TIME</th>
+                    <th style="width: 65px;">CLASS</th>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <th class="recess-cell" style="width: 25px;">R<br>e<br>c<br>e<br>s<br>s</th>
+                        {% else %}
+                        <th>{{ slot.slot_label }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days %}
+                    {% set day_loop = loop %}
+                    {% for cls in classes %}
+                    {% set cls_loop = loop %}
+                    <tr>
+                        {% if cls_loop.first %}
+                        <!-- Day cell spans all classes for this day -->
+                        <td rowspan="{{ classes|length }}" class="day-header-cell">
+                            {% for char in day.upper() %}
+                                <div>{{ char }}</div>
+                            {% endfor %}
+                        </td>
+                        {% endif %}
+
+                        <!-- Class cell (SY, TY, BY) -->
+                        <td class="class-header-cell fw-bold">
+                            {{ cls.name }}
+                        </td>
+
+                        <!-- Time Slots -->
+                        {% for slot in slots %}
+                            {% if slot.is_recess %}
+                                {% if cls_loop.first %}
+                                <td rowspan="{{ classes|length }}" class="recess-cell">
+                                    R<br>e<br>c<br>e<br>s<br>s
+                                </td>
+                                {% endif %}
+                            {% else %}
+                                <td>
+                                    {% set cell_entries = grid[day][cls.id][slot.id] %}
+                                    <div class="tt-slot-container">
+                                        {% if cell_entries and cell_entries|length > 0 %}
+                                            {% for e in cell_entries %}
+                                                {% set type_class = 'type-theory' %}
+                                                {% if e.entry_type == 'Practical' %}
+                                                    {% set type_class = 'type-practical' %}
+                                                {% elif e.entry_type == 'Meeting' %}
+                                                    {% set type_class = 'type-meeting' %}
+                                                {% elif e.entry_type == 'Online' %}
+                                                    {% set type_class = 'type-online' %}
+                                                {% endif %}
+
+                                                <div class="tt-cell-item {{ type_class }}"
+                                                     data-entry-id="{{ e.id }}"
+                                                     data-day="{{ day }}"
+                                                     data-slot-id="{{ slot.id }}"
+                                                     data-class-id="{{ cls.id }}"
+                                                     data-batch-id="{{ e.batch_id or '' }}"
+                                                     data-subject-id="{{ e.subject_id or '' }}"
+                                                     data-teacher-id="{{ e.teacher_id or '' }}"
+                                                     data-room-id="{{ e.room_id or '' }}"
+                                                     data-entry-type="{{ e.entry_type }}"
+                                                     data-custom-title="{{ e.custom_title or '' }}"
+                                                     title="Click to edit: {{ e.custom_title }}">
+                                                    <span class="edit-hint"><i class="fas fa-pen"></i></span>
+                                                    <div class="fw-bold">{{ e.custom_title or (e.subject.code ~ ' - ' ~ (e.teacher.code if e.teacher else '')) }}</div>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <!-- Empty slot click to add -->
+                                            <button type="button" class="empty-slot-btn no-print"
+                                                    data-day="{{ day }}"
+                                                    data-slot-id="{{ slot.id }}"
+                                                    data-class-id="{{ cls.id }}"
+                                                    title="Click to add period">
+                                                <i class="fas fa-plus-circle opacity-25"></i>
+                                            </button>
+                                            <span class="d-none d-print-block">-</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bottom Section: Faculty Names & Batches Tables (Exact match to PDF) -->
+    <div class="bottom-info-section">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="table-responsive">
+                    <table class="faculty-table">
+                        <thead>
+                            <tr>
+                                <th colspan="6" class="text-center py-1">NAME OF FACULTY</th>
+                            </tr>
+                            <tr>
+                                <th style="width: 25px;">#</th>
+                                <th>Name of Faculty</th>
+                                <th style="width: 60px;">Code</th>
+                                <th style="width: 25px;">#</th>
+                                <th>Name of Faculty</th>
+                                <th style="width: 60px;">Code</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Dr. Mr. S. L. KOTGIRE</td>
+                                <td class="fw-bold">DR.SLK</td>
+                                <td>7</td>
+                                <td>Ms. A. K. SALVE</td>
+                                <td class="fw-bold">AKS</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Dr. Mrs. K. P. PAITHANE</td>
+                                <td class="fw-bold">Dr.KPP</td>
+                                <td>8</td>
+                                <td>Ms. MAITHILI V. M.</td>
+                                <td class="fw-bold">MVM</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Dr. M. R. BANWASKAR</td>
+                                <td class="fw-bold">Dr.MRB</td>
+                                <td>9</td>
+                                <td>Mr. D. J. TUPTEWAR</td>
+                                <td class="fw-bold">DJT</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Mr. V. S. JADHAV</td>
+                                <td class="fw-bold">VSJ</td>
+                                <td>10</td>
+                                <td>Ms. A. B. DALVI</td>
+                                <td class="fw-bold">ABD</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Ms. P. P. KANADKHEDKAR</td>
+                                <td class="fw-bold">PPK</td>
+                                <td>11</td>
+                                <td>Ms. KUCHAN A. P.</td>
+                                <td class="fw-bold">KAP</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>Mr. SAYED SHOAIB ANWAR</td>
+                                <td class="fw-bold">SSA</td>
+                                <td>12</td>
+                                <td>Dr. S. S. PATIL</td>
+                                <td class="fw-bold">SSP</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <table class="faculty-table h-100">
+                    <thead>
+                        <tr>
+                            <th colspan="2" class="text-center py-1">PR- BATCHES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold text-center">Batch 1</td>
+                            <td>S1, T1, B1 = 1 - 20</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-center">Batch 2</td>
+                            <td>S2, T2, B2 = 21 - 40</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-center">Batch 3</td>
+                            <td>S3, T3, B3 = 41 - 60</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-center">Batch 4</td>
+                            <td>S4, T4, B4 = 61 Onwards</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Official Signatures Bar -->
+        <div class="signatures-bar">
+            <div class="sig-block">
+                <div class="sig-name">{{ setting.tt_incharge if setting else "Mr. Sayed Shoaib Anwar" }}</div>
+                <div class="sig-title">Time Table Incharge</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-name">{{ setting.dept_coordinator if setting else "Ms. A. K. Salve" }}</div>
+                <div class="sig-title">Dept. Academic Coordinator</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-name">{{ setting.hod_name if setting else "Dr. Mrs. Kalpana P. Paithane" }}</div>
+                <div class="sig-title">Prof. and Head</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

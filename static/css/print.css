@@ -1,0 +1,105 @@
+/* Print Stylesheet for Official Academic Timetable */
+@page {
+  size: A4 landscape;
+  margin: 8mm 6mm 8mm 6mm;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 8pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide navigation, sidebar, action buttons, toolbars, and alerts during printing */
+  .sidebar,
+  .top-navbar,
+  .action-toolbar,
+  .btn,
+  .alert,
+  .modal,
+  .edit-hint,
+  .empty-slot-btn,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  .main-wrapper {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .content-body {
+    padding: 0 !important;
+  }
+
+  .timetable-container {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    margin-bottom: 8px !important;
+    overflow: visible !important;
+  }
+
+  .college-header-box {
+    border: 1.5px solid #000 !important;
+    padding: 6px !important;
+    margin-bottom: 8px !important;
+    box-shadow: none !important;
+  }
+
+  .college-name {
+    font-size: 14pt !important;
+    color: #000 !important;
+  }
+
+  .table-timetable {
+    width: 100% !important;
+    font-size: 6.5pt !important;
+  }
+
+  .table-timetable th {
+    background-color: #f1f5f9 !important;
+    color: #000000 !important;
+    border: 1px solid #000 !important;
+    padding: 3px 2px !important;
+  }
+
+  .table-timetable td {
+    border: 1px solid #000 !important;
+    padding: 2px !important;
+  }
+
+  .recess-cell {
+    background-color: #f3f4f6 !important;
+    color: #000000 !important;
+  }
+
+  .tt-cell-item {
+    background: transparent !important;
+    border: 0.5px solid #666 !important;
+    padding: 1.5px !important;
+    font-size: 6pt !important;
+    line-height: 1.1 !important;
+  }
+
+  .bottom-info-section {
+    border: 1px solid #000 !important;
+    padding: 4px !important;
+    margin-top: 6px !important;
+  }
+
+  .signatures-bar {
+    margin-top: 15px !important;
+    border-top: 1px solid #000 !important;
+    padding-top: 6px !important;
+  }
+
+  .sig-name {
+    color: #000 !important;
+    font-size: 8pt !important;
+  }
+}

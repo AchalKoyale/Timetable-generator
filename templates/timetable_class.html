@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Class Timetable - {{ selected_class.name if selected_class else 'Class View' }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="action-toolbar no-print">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="m-0 fw-bold text-navy">
+                <i class="fas fa-graduation-cap text-primary me-2"></i> Class-wise Timetable
+            </h5>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-primary dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown">
+                    {{ selected_class.name if selected_class else 'Select Class' }}
+                </button>
+                <ul class="dropdown-menu shadow">
+                    {% for c in classes %}
+                    <li><a class="dropdown-item {% if selected_class and selected_class.id == c.id %}active{% endif %}" href="{{ url_for('timetable_class', class_id=c.id) }}">{{ c.name }} - {{ c.year_name }} (Sem {{ c.semester }})</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('export_pdf', class_id=selected_class.id if selected_class else None) }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-file-pdf me-1"></i> Export PDF
+            </a>
+            <button onclick="window.print()" class="btn btn-sm btn-dark">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+
+    {% if selected_class %}
+    <!-- College Header -->
+    <div class="college-header-box">
+        <div class="college-trust">{{ setting.trust_name if setting else "Mahatma Gandhi Mission's" }}</div>
+        <div class="college-name">{{ setting.college_name if setting else "COLLEGE OF ENGINEERING, NANDED" }}</div>
+        <div class="college-dept">{{ setting.department_name }}</div>
+        <div class="h5 fw-bold text-primary mt-2">{{ selected_class.name }} ({{ selected_class.year_name }} - Semester {{ selected_class.semester }})</div>
+        <div class="small text-muted">Academic Year 2026-27 | WEF: {{ setting.wef_date if setting else "17/08/2026" }}</div>
+    </div>
+
+    <!-- Timetable Grid -->
+    <div class="timetable-container">
+        <table class="table-timetable">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">DAY</th>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <th class="recess-cell" style="width: 25px;">R<br>e<br>c<br>e<br>s<br>s</th>
+                        {% else %}
+                        <th>{{ slot.slot_label }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days %}
+                <tr>
+                    <td class="day-header-cell fw-bold">{{ day[:3].upper() }}</td>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <td class="recess-cell">R<br>e<br>c<br>e<br>s<br>s</td>
+                        {% else %}
+                        <td>
+                            {% set cell_entries = grid[day][slot.id] %}
+                            <div class="tt-slot-container">
+                                {% if cell_entries and cell_entries|length > 0 %}
+                                    {% for e in cell_entries %}
+                                        {% set type_class = 'type-theory' %}
+                                        {% if e.entry_type == 'Practical' %}
+                                            {% set type_class = 'type-practical' %}
+                                        {% elif e.entry_type == 'Meeting' %}
+                                            {% set type_class = 'type-meeting' %}
+                                        {% elif e.entry_type == 'Online' %}
+                                            {% set type_class = 'type-online' %}
+                                        {% endif %}
+
+                                        <div class="tt-cell-item {{ type_class }}"
+                                             data-entry-id="{{ e.id }}"
+                                             data-day="{{ day }}"
+                                             data-slot-id="{{ slot.id }}"
+                                             data-class-id="{{ selected_class.id }}"
+                                             data-batch-id="{{ e.batch_id or '' }}"
+                                             data-subject-id="{{ e.subject_id or '' }}"
+                                             data-teacher-id="{{ e.teacher_id or '' }}"
+                                             data-room-id="{{ e.room_id or '' }}"
+                                             data-entry-type="{{ e.entry_type }}"
+                                             data-custom-title="{{ e.custom_title or '' }}"
+                                             title="Click to edit: {{ e.custom_title }}">
+                                            <span class="edit-hint"><i class="fas fa-pen"></i></span>
+                                            <div class="fw-bold">{{ e.custom_title or (e.subject.code ~ ' - ' ~ (e.teacher.code if e.teacher else '')) }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <button type="button" class="empty-slot-btn no-print"
+                                            data-day="{{ day }}"
+                                            data-slot-id="{{ slot.id }}"
+                                            data-class-id="{{ selected_class.id }}"
+                                            title="Click to add period">
+                                        <i class="fas fa-plus-circle opacity-25"></i>
+                                    </button>
+                                    <span class="d-none d-print-block">-</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Room Allocation - {{ selected_room.name if selected_room else 'Room View' }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="action-toolbar no-print">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="m-0 fw-bold text-navy">
+                <i class="fas fa-door-open text-primary me-2"></i> Room & Lab Allocation
+            </h5>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-primary dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown">
+                    {{ selected_room.name ~ ' (' ~ selected_room.room_type ~ ')' if selected_room else 'Select Room' }}
+                </button>
+                <ul class="dropdown-menu shadow" style="max-height: 300px; overflow-y: auto;">
+                    {% for r in rooms %}
+                    <li><a class="dropdown-item {% if selected_room and selected_room.id == r.id %}active{% endif %}" href="{{ url_for('timetable_room', room_id=r.id) }}"><strong class="me-1">{{ r.name }}:</strong> {{ r.room_type }} (Cap: {{ r.capacity }})</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <button onclick="window.print()" class="btn btn-sm btn-dark">
+            <i class="fas fa-print me-1"></i> Print Room Chart
+        </button>
+    </div>
+
+    {% if selected_room %}
+    <div class="college-header-box">
+        <div class="college-trust">{{ setting.trust_name if setting else "Mahatma Gandhi Mission's" }}</div>
+        <div class="college-name">{{ setting.college_name if setting else "COLLEGE OF ENGINEERING, NANDED" }}</div>
+        <div class="college-dept">{{ setting.department_name }}</div>
+        <div class="h5 fw-bold text-primary mt-2">Facility Utilization Schedule: {{ selected_room.name }} ({{ selected_room.room_type }})</div>
+        <div class="small text-muted">Capacity: {{ selected_room.capacity }} students &bull; Location: {{ selected_room.location }}</div>
+    </div>
+
+    <div class="timetable-container">
+        <table class="table-timetable">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">DAY</th>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <th class="recess-cell" style="width: 25px;">R<br>e<br>c<br>e<br>s<br>s</th>
+                        {% else %}
+                        <th>{{ slot.slot_label }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days %}
+                <tr>
+                    <td class="day-header-cell fw-bold">{{ day[:3].upper() }}</td>
+                    {% for slot in slots %}
+                        {% if slot.is_recess %}
+                        <td class="recess-cell">R<br>e<br>c<br>e<br>s<br>s</td>
+                        {% else %}
+                        <td>
+                            {% set cell_entries = grid[day][slot.id] %}
+                            <div class="tt-slot-container">
+                                {% if cell_entries and cell_entries|length > 0 %}
+                                    {% for e in cell_entries %}
+                                        <div class="tt-cell-item type-practical p-2">
+                                            <div class="badge bg-primary mb-1">{{ e.academic_class.name }}</div>
+                                            <div class="fw-bold">{{ e.custom_title or (e.subject.code ~ ' - ' ~ (e.teacher.code if e.teacher else '')) }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-success small opacity-75">Available</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

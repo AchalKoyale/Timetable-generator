@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% block title %}Manage Subjects & Courses{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold text-navy m-0">Subjects & Courses</h3>
+            <p class="text-muted small m-0">Curriculum Structure & Weekly Contact Hours</p>
+        </div>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+            <i class="fas fa-plus me-1"></i> Add Subject
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Code</th>
+                            <th>Subject Name</th>
+                            <th>Type</th>
+                            <th>Class / Sem</th>
+                            <th>Assigned Faculty</th>
+                            <th>Designated Room</th>
+                            <th>Weekly Hours</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in subjects %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">{{ s.code }}</td>
+                            <td>{{ s.name }}</td>
+                            <td>
+                                <span class="badge {% if s.subject_type == 'Practical' %}bg-success{% elif s.subject_type == 'Meeting' %}bg-danger{% elif s.subject_type == 'Online' %}bg-info text-dark{% else %}bg-primary{% endif %}">
+                                    {{ s.subject_type }}
+                                </span>
+                            </td>
+                            <td>{{ s.academic_class.name if s.academic_class else 'All / Elective' }}</td>
+                            <td>{{ s.default_teacher.name if s.default_teacher else '-' }}</td>
+                            <td>{{ s.default_room.name if s.default_room else '-' }}</td>
+                            <td>{{ s.weekly_hours }} hrs</td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#editSubjectModal{{ s.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form action="{{ url_for('subject_delete', id=s.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete subject {{ s.code }}?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editSubjectModal{{ s.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content shadow border-0">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title fs-6">Edit Subject: {{ s.code }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ url_for('subject_edit', id=s.id) }}" method="POST">
+                                        <div class="modal-body p-4">
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Subject Code</label>
+                                                <input type="text" name="code" class="form-control form-control-sm" value="{{ s.code }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Subject Name</label>
+                                                <input type="text" name="name" class="form-control form-control-sm" value="{{ s.name }}" required>
+                                            </div>
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Type</label>
+                                                    <select name="subject_type" class="form-select form-select-sm">
+                                                        <option value="Theory" {% if s.subject_type == 'Theory' %}selected{% endif %}>Theory</option>
+                                                        <option value="Practical" {% if s.subject_type == 'Practical' %}selected{% endif %}>Practical</option>
+                                                        <option value="Meeting" {% if s.subject_type == 'Meeting' %}selected{% endif %}>Meeting</option>
+                                                        <option value="Online" {% if s.subject_type == 'Online' %}selected{% endif %}>Online</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Class</label>
+                                                    <select name="class_id" class="form-select form-select-sm">
+                                                        <option value="">-- None --</option>
+                                                        {% for c in classes %}
+                                                        <option value="{{ c.id }}" {% if s.class_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Default Faculty</label>
+                                                    <select name="default_teacher_id" class="form-select form-select-sm">
+                                                        <option value="">-- None --</option>
+                                                        {% for t in teachers %}
+                                                        <option value="{{ t.id }}" {% if s.default_teacher_id == t.id %}selected{% endif %}>{{ t.code }} - {{ t.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Default Room</label>
+                                                    <select name="default_room_id" class="form-select form-select-sm">
+                                                        <option value="">-- None --</option>
+                                                        {% for r in rooms %}
+                                                        <option value="{{ r.id }}" {% if s.default_room_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Weekly Hours</label>
+                                                <input type="number" name="weekly_hours" class="form-control form-control-sm" value="{{ s.weekly_hours }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light">
+                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fs-6">Add New Subject</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('subjects_list') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Subject Code</label>
+                        <input type="text" name="code" class="form-control form-control-sm" placeholder="e.g. PCC-EDC-202" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Subject Name</label>
+                        <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Electronic Devices & Circuits" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Type</label>
+                            <select name="subject_type" class="form-select form-select-sm">
+                                <option value="Theory">Theory</option>
+                                <option value="Practical">Practical</option>
+                                <option value="Meeting">Meeting</option>
+                                <option value="Online">Online</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Class</label>
+                            <select name="class_id" class="form-select form-select-sm">
+                                <option value="">-- None --</option>
+                                {% for c in classes %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Default Faculty</label>
+                            <select name="default_teacher_id" class="form-select form-select-sm">
+                                <option value="">-- None --</option>
+                                {% for t in teachers %}
+                                <option value="{{ t.id }}">{{ t.code }} - {{ t.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Default Room</label>
+                            <select name="default_room_id" class="form-select form-select-sm">
+                                <option value="">-- None --</option>
+                                {% for r in rooms %}
+                                <option value="{{ r.id }}">{{ r.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Weekly Hours</label>
+                        <input type="number" name="weekly_hours" class="form-control form-control-sm" value="4">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Add Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

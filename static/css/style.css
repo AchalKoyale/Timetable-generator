@@ -1,0 +1,458 @@
+/* Smart Timetable Generator - Modern College Dashboard Styling */
+:root {
+  --primary-navy: #0f2744;
+  --secondary-navy: #1b3a5b;
+  --accent-gold: #c59b27;
+  --accent-blue: #0284c7;
+  --light-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --recess-bg: #fef3c7;
+  --recess-text: #92400e;
+  --theory-bg: #e0f2fe;
+  --theory-border: #38bdf8;
+  --theory-text: #0369a1;
+  --practical-bg: #ecfdf5;
+  --practical-border: #34d399;
+  --practical-text: #065f46;
+  --meeting-bg: #fef2f2;
+  --meeting-border: #f87171;
+  --meeting-text: #991b1b;
+  --online-bg: #f5f3ff;
+  --online-border: #a78bfa;
+  --online-text: #5b21b6;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--light-bg);
+  color: var(--text-dark);
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, #0f2744 0%, #153255 100%);
+  color: #fff;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 1.5rem 1.25rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-header h5 {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+  color: #fff;
+  margin-bottom: 0.2rem;
+}
+
+.sidebar-header span {
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 1rem 0.75rem;
+  margin: 0;
+}
+
+.sidebar-menu .menu-category {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255,255,255,0.45);
+  font-weight: 700;
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.sidebar-menu .nav-item {
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-menu .nav-link {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.sidebar-menu .nav-link i {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+  color: rgba(255,255,255,0.65);
+}
+
+.sidebar-menu .nav-link:hover,
+.sidebar-menu .nav-link.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.sidebar-menu .nav-link.active i {
+  color: var(--accent-gold);
+}
+
+/* Main Content Area */
+.main-wrapper {
+  margin-left: 260px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Navbar */
+.top-navbar {
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.85rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.content-body {
+  padding: 1.75rem;
+  flex: 1;
+}
+
+/* Stat Cards */
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1.25rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+/* Academic Header in Timetable */
+.college-header-box {
+  background: #ffffff;
+  border: 2px solid var(--primary-navy);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 3px 10px rgba(15,39,68,0.05);
+}
+
+.college-trust {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 2px;
+}
+
+.college-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.college-address {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.college-dept {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f2744;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 4px 0;
+  margin: 6px 0;
+  text-transform: uppercase;
+}
+
+.college-meta {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #831843;
+}
+
+/* Master Timetable Table */
+.timetable-container {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.table-timetable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.table-timetable th {
+  background: var(--primary-navy);
+  color: #ffffff;
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px 6px;
+  border: 1px solid #334155;
+  font-weight: 700;
+  white-space: normal;
+  font-size: 0.75rem;
+}
+
+.table-timetable td {
+  border: 1px solid #cbd5e1;
+  text-align: center;
+  vertical-align: middle;
+  padding: 6px 4px;
+  position: relative;
+  min-height: 60px;
+}
+
+.day-header-cell {
+  background: #f1f5f9;
+  font-weight: 800;
+  color: var(--primary-navy);
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  width: 60px;
+}
+
+.class-header-cell {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #0f172a;
+  width: 70px;
+}
+
+.recess-cell {
+  background-color: var(--recess-bg) !important;
+  color: var(--recess-text);
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  padding: 6px 2px;
+  width: 28px;
+  user-select: none;
+}
+
+/* Timetable Entry Cell Blocks */
+.tt-slot-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 52px;
+  justify-content: center;
+}
+
+.tt-cell-item {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 4px 6px;
+  text-align: center;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: block;
+  user-select: none;
+}
+
+.tt-cell-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  border-color: #0284c7 !important;
+  z-index: 5;
+}
+
+.tt-cell-item .edit-hint {
+  display: none;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  font-size: 0.65rem;
+  color: #0284c7;
+}
+
+.tt-cell-item:hover .edit-hint {
+  display: inline-block;
+}
+
+/* Entry Types Colors */
+.type-theory {
+  background: var(--theory-bg);
+  border-color: var(--theory-border);
+  color: var(--theory-text);
+}
+
+.type-practical {
+  background: var(--practical-bg);
+  border-color: var(--practical-border);
+  color: var(--practical-text);
+}
+
+.type-meeting {
+  background: var(--meeting-bg);
+  border-color: var(--meeting-border);
+  color: var(--meeting-text);
+}
+
+.type-online {
+  background: var(--online-bg);
+  border-color: var(--online-border);
+  color: var(--online-text);
+}
+
+.empty-slot-btn {
+  width: 100%;
+  height: 100%;
+  min-height: 48px;
+  background: transparent;
+  border: 1px dashed transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.empty-slot-btn:hover {
+  background: rgba(2, 132, 199, 0.05);
+  border-color: #38bdf8;
+  color: #0284c7;
+}
+
+/* Tables at Bottom: Faculty & Batches */
+.bottom-info-section {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.faculty-table {
+  font-size: 0.75rem;
+  width: 100%;
+}
+
+.faculty-table th {
+  background: #f1f5f9;
+  color: var(--primary-navy);
+  font-weight: 700;
+  padding: 4px 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.faculty-table td {
+  padding: 4px 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Signatures Bar */
+.signatures-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1rem 2rem 0.5rem;
+  border-top: 1px solid #cbd5e1;
+  text-align: center;
+}
+
+.sig-block {
+  min-width: 180px;
+}
+
+.sig-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--primary-navy);
+  margin-bottom: 2px;
+}
+
+.sig-title {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Action Floating Toolbar */
+.action-toolbar {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .sidebar {
+    margin-left: -260px;
+  }
+  .sidebar.show {
+    margin-left: 0;
+  }
+  .main-wrapper {
+    margin-left: 0;
+  }
+}
