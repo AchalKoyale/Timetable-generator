@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% block title %}Faculty Workload Management - MGM COE{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header Banner -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary px-2 py-1"><i class="fas fa-graduation-cap me-1"></i> Autonomous Engineering College</span>
+                <span class="badge bg-light text-navy border">Sem I (2026-27 Final Workload)</span>
+            </div>
+            <h3 class="fw-bold text-navy m-0">Teacher Workload Allocation</h3>
+            <p class="text-muted small m-0">Department of Electronics & Telecommunication Engineering • MGM's College of Engineering, Nanded</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ url_for('workload_template') }}" class="btn btn-outline-success btn-sm shadow-sm" title="Download Excel Workload Template">
+                <i class="fas fa-file-excel me-1"></i> Download Template (.xlsx)
+            </a>
+            <button class="btn btn-outline-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadWorkloadModal">
+                <i class="fas fa-upload me-1"></i> Upload Excel / CSV
+            </button>
+            <button class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#addWorkloadModal">
+                <i class="fas fa-plus-circle me-1"></i> Add Allocation
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Statistics KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Dept Workload</div>
+                        <div class="fs-3 fw-bold text-navy">{{ total_overall }} <span class="fs-6 text-muted fw-normal">hrs/wk</span></div>
+                        <div class="small text-success"><i class="fas fa-check-circle me-1"></i> Target: 186 Hours</div>
+                    </div>
+                    <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                        <i class="fas fa-business-time fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Theory (TH)</div>
+                        <div class="fs-3 fw-bold text-primary">{{ total_theory }} <span class="fs-6 text-muted fw-normal">hrs</span></div>
+                        <div class="small text-muted">Across SY, TY, B.Tech & Cross-Dept</div>
+                    </div>
+                    <div class="bg-info-subtle text-info p-3 rounded-circle">
+                        <i class="fas fa-chalkboard-teacher fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Practical (PR)</div>
+                        <div class="fs-3 fw-bold text-indigo">{{ total_practical }} <span class="fs-6 text-muted fw-normal">hrs</span></div>
+                        <div class="small text-muted">Laboratory & Batch Rotations</div>
+                    </div>
+                    <div class="bg-warning-subtle text-warning p-3 rounded-circle">
+                        <i class="fas fa-flask fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Active Faculty Members</div>
+                        <div class="fs-3 fw-bold text-dark">{{ teachers|length }}</div>
+                        <div class="small text-muted">{{ assignments|length }} Subject Allocations</div>
+                    </div>
+                    <div class="bg-success-subtle text-success p-3 rounded-circle">
+                        <i class="fas fa-users fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Workload Capacity Matrix Accordion/Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold text-navy m-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Faculty Weekly Workload Balance & Cap Status</h6>
+                <span class="small text-muted">Real-time tracking of assigned workload vs weekly target capacity</span>
+            </div>
+            <a href="{{ url_for('generate_timetable') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-magic me-1"></i> Open Auto-Scheduler
+            </a>
+        </div>
+        <div class="card-body p-4 pt-1">
+            <div class="row g-3">
+                {% for t in teachers %}
+                {% set assigned = t.total_assigned_workload %}
+                {% set cap = t.max_weekly_hours %}
+                {% set percent = ((assigned / cap) * 100)|round|int if cap > 0 else 0 %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="border rounded-3 p-3 bg-light-subtle h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary me-1">{{ t.code }}</span>
+                                <span class="fw-bold text-navy small">{{ t.name }}</span>
+                            </div>
+                            <span class="badge {% if assigned == cap %}bg-success{% elif assigned > cap %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ assigned }} / {{ cap }} hrs
+                            </span>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar {% if assigned > cap %}bg-danger{% elif assigned == cap %}bg-success{% else %}bg-primary{% endif %}"
+                                 role="progressbar" style="width: {{ [percent, 100]|min }}%;"
+                                 aria-valuenow="{{ assigned }}" aria-valuemin="0" aria-valuemax="{{ cap }}"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                            <span>Daily Cap: {{ t.max_daily_lectures or 3 }} hrs/day</span>
+                            <span>Day Off: {{ t.day_off or 'None' }}</span>
+                            <span>Status: {% if assigned == cap %}<strong class="text-success">Balanced</strong>{% elif assigned > cap %}<strong class="text-danger">Overloaded</strong>{% else %}<span>{{ cap - assigned }} hrs left</span>{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Workload Allocations Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold text-navy m-0"><i class="fas fa-list me-2 text-primary"></i>Detailed Workload Assignments</h6>
+                <span class="small text-muted">Authentic breakdown matching MGM COE E&TC Department Workload Document</span>
+            </div>
+            <div class="d-flex gap-2">
+                <input type="text" id="workloadSearch" class="form-control form-control-sm" placeholder="Search teacher, class, subject..." style="max-width: 260px;">
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="workloadTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Faculty Name</th>
+                            <th>Code</th>
+                            <th>Class / Cohort</th>
+                            <th>Subject</th>
+                            <th class="text-center">TH (hrs)</th>
+                            <th class="text-center">PR (hrs)</th>
+                            <th class="text-center">Total (hrs)</th>
+                            <th>Remarks / Batches</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in assignments %}
+                        <tr>
+                            <td class="ps-4 text-muted">{{ loop.index }}</td>
+                            <td class="fw-bold text-navy">{{ a.teacher.name }}</td>
+                            <td><span class="badge bg-primary">{{ a.teacher.code }}</span></td>
+                            <td><span class="badge bg-secondary">{{ a.academic_class.name }}</span></td>
+                            <td>
+                                <div class="fw-semibold">{{ a.subject.name }}</div>
+                                <div class="small text-muted font-monospace">{{ a.subject.code }}</div>
+                            </td>
+                            <td class="text-center fw-bold">{{ a.theory_hours }}</td>
+                            <td class="text-center fw-bold">{{ a.practical_hours }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-dark px-2 py-1">{{ a.total_hours }}</span>
+                            </td>
+                            <td>
+                                <span class="small text-muted">{{ a.notes or '-' }}</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#editWorkloadModal{{ a.id }}" title="Edit Allocation">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form action="{{ url_for('workload_delete', id=a.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this workload allocation?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Workload Modal -->
+                        <div class="modal fade" id="editWorkloadModal{{ a.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content shadow border-0">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title fs-6"><i class="fas fa-edit me-2"></i>Edit Allocation: {{ a.teacher.code }} - {{ a.subject.code }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ url_for('workload_edit', id=a.id) }}" method="POST">
+                                        <div class="modal-body p-4">
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Faculty Member</label>
+                                                <select name="teacher_id" class="form-select form-select-sm" required>
+                                                    {% for t in teachers %}
+                                                    <option value="{{ t.id }}" {% if t.id == a.teacher_id %}selected{% endif %}>{{ t.code }} - {{ t.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Class / Cohort</label>
+                                                    <select name="class_id" class="form-select form-select-sm" required>
+                                                        {% for c in classes %}
+                                                        <option value="{{ c.id }}" {% if c.id == a.class_id %}selected{% endif %}>{{ c.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Subject / Course</label>
+                                                    <select name="subject_id" class="form-select form-select-sm" required>
+                                                        {% for s in subjects %}
+                                                        <option value="{{ s.id }}" {% if s.id == a.subject_id %}selected{% endif %}>{{ s.code }} - {{ s.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Theory Hours (TH/wk)</label>
+                                                    <input type="number" name="theory_hours" class="form-control form-control-sm" value="{{ a.theory_hours }}" min="0" max="40" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Practical Hours (PR/wk)</label>
+                                                    <input type="number" name="practical_hours" class="form-control form-control-sm" value="{{ a.practical_hours }}" min="0" max="40" required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small fw-bold">Remarks / Batches / Notes</label>
+                                                <input type="text" name="notes" class="form-control form-control-sm" value="{{ a.notes or '' }}" placeholder="e.g. S1,S2,S3,S4 (2*4=8 hrs)">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light">
+                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Workload Allocation -->
+<div class="modal fade" id="addWorkloadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fs-6"><i class="fas fa-plus-circle me-2"></i>Add Workload Allocation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('workload_add') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Faculty Member *</label>
+                        <select name="teacher_id" class="form-select form-select-sm" required>
+                            <option value="">-- Select Faculty --</option>
+                            {% for t in teachers %}
+                            <option value="{{ t.id }}">{{ t.code }} - {{ t.name }} (Cap: {{ t.max_weekly_hours }}h)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Class / Cohort *</label>
+                            <select name="class_id" class="form-select form-select-sm" required>
+                                <option value="">-- Select Class --</option>
+                                {% for c in classes %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Subject / Course *</label>
+                            <select name="subject_id" class="form-select form-select-sm" required>
+                                <option value="">-- Select Subject --</option>
+                                {% for s in subjects %}
+                                <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Theory Hours (TH/wk)</label>
+                            <input type="number" name="theory_hours" class="form-control form-control-sm" value="3" min="0" max="40" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Practical Hours (PR/wk)</label>
+                            <input type="number" name="practical_hours" class="form-control form-control-sm" value="0" min="0" max="40" required>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Remarks / Batches / Notes</label>
+                        <input type="text" name="notes" class="form-control form-control-sm" placeholder="e.g. S1,S2,S3,S4 or Room F-12">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-check me-1"></i> Add Allocation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Upload Excel / CSV -->
+<div class="modal fade" id="uploadWorkloadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fs-6"><i class="fas fa-file-excel me-2"></i>Upload Workload (.xlsx or .csv)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('workload_upload') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        <i class="fas fa-info-circle me-1"></i>
+                        The file must contain columns: <code>Faculty Code</code>, <code>Class</code>, <code>Subject Code</code>, <code>Theory Hours</code>, <code>Practical Hours</code>.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Excel or CSV Spreadsheet *</label>
+                        <input type="file" name="workload_file" class="form-control" accept=".xlsx, .xls, .csv" required>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <span class="small text-muted">Need the official format?</span>
+                        <a href="{{ url_for('workload_template') }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-download me-1"></i> Get Sample Template
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-cloud-upload-alt me-1"></i> Upload & Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('workloadSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#workloadTable tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

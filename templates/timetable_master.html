@@ -36,6 +36,11 @@
                 </button>
             </form>
 
+            <!-- Export Excel (.xlsx) -->
+            <a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-outline-success" title="Download Master Timetable in Excel (.xlsx)">
+                <i class="fas fa-file-excel me-1"></i> Export Excel
+            </a>
+
             <!-- Export CSV -->
             <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="fas fa-file-csv me-1"></i> Export CSV

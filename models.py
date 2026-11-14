@@ -28,9 +28,21 @@ class Teacher(db.Model):
     designation = db.Column(db.String(100), default='Assistant Professor')
     department = db.Column(db.String(100), default='Electronics and Telecommunication Engineering')
     max_weekly_hours = db.Column(db.Integer, default=20)
+    max_daily_lectures = db.Column(db.Integer, default=3) # Prevent same teacher burnout in a single day
+    day_off = db.Column(db.String(20), nullable=True) # Preferred day off or half day
+    is_available = db.Column(db.Boolean, default=True)
 
     # Relationships
     timetable_entries = db.relationship('TimetableEntry', backref='teacher', cascade='all, delete-orphan', lazy=True)
+
+    @property
+    def total_assigned_workload(self):
+        assignments = TeacherWorkloadAssignment.query.filter_by(teacher_id=self.id).all()
+        return sum(a.total_hours for a in assignments)
+
+    @property
+    def current_scheduled_hours(self):
+        return TimetableEntry.query.filter_by(teacher_id=self.id).count()
 
 
 class Room(db.Model):
@@ -82,6 +94,22 @@ class Subject(db.Model):
     default_teacher = db.relationship('Teacher', foreign_keys=[default_teacher_id])
     default_room = db.relationship('Room', foreign_keys=[default_room_id])
     timetable_entries = db.relationship('TimetableEntry', backref='subject', cascade='all, delete-orphan', lazy=True)
+
+
+class TeacherWorkloadAssignment(db.Model):
+    __tablename__ = 'teacher_workload_assignments'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'), nullable=False)
+    class_id = db.Column(db.Integer, db.ForeignKey('classes.id'), nullable=False)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
+    theory_hours = db.Column(db.Integer, default=0)
+    practical_hours = db.Column(db.Integer, default=0)
+    total_hours = db.Column(db.Integer, default=0)
+    notes = db.Column(db.String(150), nullable=True) # e.g. "4*2=8", "Lab batches", roles
+
+    teacher = db.relationship('Teacher', backref='workload_assignments')
+    academic_class = db.relationship('AcademicClass', backref='workload_assignments')
+    subject = db.relationship('Subject', backref='workload_assignments')
 
 
 class TimeSlot(db.Model):

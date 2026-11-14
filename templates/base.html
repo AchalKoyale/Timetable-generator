@@ -75,6 +75,11 @@
 
             <li class="menu-category">Academic Master Data</li>
             <li class="nav-item">
+                <a href="{{ url_for('workload_dashboard') }}" class="nav-link {% if request.path.startswith('/workload') %}active{% endif %}">
+                    <i class="fas fa-tasks"></i> Workload Allocation
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ url_for('teachers_list') }}" class="nav-link {% if request.path == '/teachers' %}active{% endif %}">
                     <i class="fas fa-user-tie"></i> Teachers & Faculty
                 </a>
@@ -121,9 +126,17 @@
                     <span class="badge bg-success rounded-circle p-1"></span> Localhost: 127.0.0.1:5000
                 </span>
 
-                <a href="{{ url_for('timetable_master') }}" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-table me-1"></i> Timetable
-                </a>
+                <div class="btn-group">
+                    <a href="{{ url_for('timetable_master') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-table me-1"></i> Timetable
+                    </a>
+                    <a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-outline-success" title="Download Master Timetable (.xlsx)">
+                        <i class="fas fa-file-excel me-1"></i> Excel
+                    </a>
+                    <a href="{{ url_for('export_pdf') }}" class="btn btn-sm btn-outline-danger" title="Download Landscape PDF">
+                        <i class="fas fa-file-pdf me-1"></i> PDF
+                    </a>
+                </div>
 
                 {% if is_logged_in %}
                 <div class="dropdown">
@@ -184,11 +197,30 @@
 
                         <!-- Hidden Keys -->
                         <input type="hidden" id="editEntryId" name="entry_id">
-                        <input type="hidden" id="editDay" name="day">
-                        <input type="hidden" id="editSlotId" name="slot_id">
                         <input type="hidden" id="editClassId" name="class_id">
 
                         <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Day of Week</label>
+                                <select class="form-select form-select-sm" id="editDay" name="day" required>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Time Slot / Timing</label>
+                                <select class="form-select form-select-sm" id="editSlotId" name="slot_id" required>
+                                    {% for s in all_slots %}
+                                    <option value="{{ s.id }}">{{ s.slot_label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Session / Type</label>
                                 <select class="form-select form-select-sm" id="editEntryType" name="entry_type">
@@ -203,35 +235,29 @@
                                 <label class="form-label small fw-bold">Batch (Optional)</label>
                                 <select class="form-select form-select-sm" id="editBatchId" name="batch_id">
                                     <option value="">Whole Class (All Batches)</option>
-                                    {% if batches %}
-                                        {% for b in batches %}
-                                        <option value="{{ b.id }}">{{ b.name }} ({{ b.academic_class.name }})</option>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for b in all_batches %}
+                                    <option value="{{ b.id }}">{{ b.name }} ({{ b.academic_class.name }})</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label small fw-bold">Subject</label>
+                                <label class="form-label small fw-bold">Subject / Course</label>
                                 <select class="form-select form-select-sm" id="editSubjectId" name="subject_id">
                                     <option value="">-- Select Subject --</option>
-                                    {% if subjects %}
-                                        {% for s in subjects %}
-                                        <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for s in all_subjects %}
+                                    <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">Faculty</label>
+                                <label class="form-label small fw-bold">Faculty Member</label>
                                 <select class="form-select form-select-sm" id="editTeacherId" name="teacher_id">
                                     <option value="">-- Select Faculty --</option>
-                                    {% if teachers %}
-                                        {% for t in teachers %}
-                                        <option value="{{ t.id }}">{{ t.code }} - {{ t.name }}</option>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for t in all_teachers %}
+                                    <option value="{{ t.id }}">{{ t.code }} - {{ t.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
@@ -239,11 +265,9 @@
                                 <label class="form-label small fw-bold">Room / Laboratory</label>
                                 <select class="form-select form-select-sm" id="editRoomId" name="room_id">
                                     <option value="">-- Select Room / Lab --</option>
-                                    {% if rooms %}
-                                        {% for r in rooms %}
-                                        <option value="{{ r.id }}">{{ r.name }} ({{ r.room_type }})</option>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for r in all_rooms %}
+                                    <option value="{{ r.id }}">{{ r.name }} ({{ r.room_type }})</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
@@ -251,6 +275,26 @@
                                 <label class="form-label small fw-bold">Custom Display Label (Overrides Default)</label>
                                 <input type="text" class="form-control form-control-sm" id="editCustomTitle" name="custom_title" placeholder="e.g. TH-PCC-EDC-202-DJT (F-12)">
                                 <div class="form-text text-muted" style="font-size: 0.7rem;">Leave empty to auto-format using Subject, Faculty and Room.</div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Swap Section (Visible when editing an existing entry) -->
+                        <div class="border rounded-3 p-3 bg-light-subtle mt-3 d-none" id="modalSwapSection">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold small text-navy"><i class="fas fa-exchange-alt me-1 text-primary"></i> Swap with Another Lecture</span>
+                                <span class="badge bg-secondary-subtle text-dark border" style="font-size: 0.7rem;">Auto Conflict Check</span>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <select class="form-select form-select-sm" id="swapTargetSelect">
+                                        <option value="">-- Select Lecture to Swap with --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-sm btn-outline-primary w-100" id="btnExecuteSwap">
+                                        <i class="fas fa-random me-1"></i> Swap
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

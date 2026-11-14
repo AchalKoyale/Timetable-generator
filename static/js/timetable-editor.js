@@ -1,13 +1,11 @@
 /**
- * Editable Timetable Interface Script
- * Allows clicking any period cell to view/edit:
- * - Subject
- * - Faculty
- * - Room / Laboratory
- * - Class / Batch
- * - Start & End time
- * - Lecture / Practical / Meeting
- * Provides Live Conflict Checking, Save Changes, Delete and Reset
+ * Editable Timetable Interface Script - MGM COE
+ * Features:
+ * - Direct cell click editing (Subject, Faculty, Room, Batch, Type, Custom Title)
+ * - Moving lectures across days and time slots
+ * - Swapping two lectures with collision checking
+ * - Instant conflict detection & force save override
+ * - Delete period & Reset to original PDF
  */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -20,8 +18,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const conflictText = document.getElementById('modalConflictText');
     const deleteBtn = document.getElementById('modalDeleteBtn');
     const saveBtn = document.getElementById('modalSaveBtn');
+    const modalSwapSection = document.getElementById('modalSwapSection');
+    const swapTargetSelect = document.getElementById('swapTargetSelect');
+    const btnExecuteSwap = document.getElementById('btnExecuteSwap');
 
-    // Attach click listeners to all timetable items
+    // Attach click listeners to all timetable cell items
     document.querySelectorAll('.tt-cell-item').forEach(item => {
         item.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -59,18 +60,27 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function openEditor(data) {
-        // Reset modal state
+        // Reset modal alert state
         conflictAlert.classList.add('d-none');
         conflictText.textContent = '';
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Changes';
 
         document.getElementById('editEntryId').value = data.entryId || '';
-        document.getElementById('editDay').value = data.day;
-        document.getElementById('editSlotId').value = data.slotId;
         document.getElementById('editClassId').value = data.classId;
 
-        // Set form fields
+        // Populate Day & Time Slot dropdowns
+        const daySelect = document.getElementById('editDay');
+        if (daySelect && data.day) {
+            daySelect.value = data.day;
+        }
+
+        const slotSelect = document.getElementById('editSlotId');
+        if (slotSelect && data.slotId) {
+            slotSelect.value = data.slotId;
+        }
+
+        // Set entity fields
         if (document.getElementById('editSubjectId')) document.getElementById('editSubjectId').value = data.subjectId || '';
         if (document.getElementById('editTeacherId')) document.getElementById('editTeacherId').value = data.teacherId || '';
         if (document.getElementById('editRoomId')) document.getElementById('editRoomId').value = data.roomId || '';
@@ -80,17 +90,85 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Header info
         const dayLabel = document.getElementById('modalDayLabel');
-        const slotLabel = document.getElementById('modalSlotLabel');
-        if (dayLabel) dayLabel.textContent = data.day;
+        if (dayLabel) dayLabel.textContent = data.day || 'Schedule Period';
         
-        // Delete button visibility
+        // Delete button & Swap Section visibility
         if (data.entryId) {
             deleteBtn.classList.remove('d-none');
+            if (modalSwapSection) {
+                modalSwapSection.classList.remove('d-none');
+                populateSwapTargets(data.entryId);
+            }
         } else {
             deleteBtn.classList.add('d-none');
+            if (modalSwapSection) {
+                modalSwapSection.classList.add('d-none');
+            }
         }
 
         editModal.show();
+    }
+
+    // Populate swap target options with other scheduled periods in the view
+    function populateSwapTargets(currentEntryId) {
+        if (!swapTargetSelect) return;
+        swapTargetSelect.innerHTML = '<option value="">-- Select Lecture to Swap with --</option>';
+
+        const allItems = document.querySelectorAll('.tt-cell-item');
+        allItems.forEach(item => {
+            const id = item.dataset.entryId;
+            if (id && id !== currentEntryId) {
+                const day = item.dataset.day;
+                const title = item.dataset.customTitle || item.innerText.trim();
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = `[${day}] ${title}`;
+                swapTargetSelect.appendChild(opt);
+            }
+        });
+    }
+
+    // Execute Swap button
+    if (btnExecuteSwap) {
+        btnExecuteSwap.addEventListener('click', function () {
+            const currentEntryId = document.getElementById('editEntryId').value;
+            const targetEntryId = swapTargetSelect ? swapTargetSelect.value : '';
+
+            if (!currentEntryId || !targetEntryId) {
+                alert('Please select a target lecture to swap with.');
+                return;
+            }
+
+            btnExecuteSwap.disabled = true;
+            btnExecuteSwap.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Swapping...';
+
+            fetch('/api/timetable/swap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    entry_id_1: parseInt(currentEntryId),
+                    entry_id_2: parseInt(targetEntryId)
+                })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, body: data })))
+            .then(({ status, body }) => {
+                if (body.success) {
+                    editModal.hide();
+                    window.location.reload();
+                } else {
+                    conflictAlert.classList.remove('d-none');
+                    conflictText.innerHTML = `<strong>Cannot Swap:</strong> ${body.message}`;
+                    btnExecuteSwap.disabled = false;
+                    btnExecuteSwap.innerHTML = '<i class="fas fa-random me-1"></i> Swap';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('An error occurred while swapping lectures.');
+                btnExecuteSwap.disabled = false;
+                btnExecuteSwap.innerHTML = '<i class="fas fa-random me-1"></i> Swap';
+            });
+        });
     }
 
     // Handle Save Form Submission

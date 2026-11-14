@@ -1,20 +1,30 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - Smart Timetable Management System{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
     <!-- Top Welcome Banner -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
-            <h3 class="fw-bold text-navy m-0">Dashboard Overview</h3>
-            <p class="text-muted small m-0">Department of Electronics & Telecommunication Engineering &bull; Sem-I 2026-27</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary px-2 py-1"><i class="fas fa-university me-1"></i> Autonomous Engineering College</span>
+                <span class="badge bg-light text-navy border">Sem-I (2026-27 Academic Year)</span>
+            </div>
+            <h3 class="fw-bold text-navy m-0">Smart Timetable Dashboard</h3>
+            <p class="text-muted small m-0">Department of Electronics & Telecommunication Engineering &bull; MGM's College of Engineering, Nanded</p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('timetable_master') }}" class="btn btn-primary btn-sm shadow-sm">
-                <i class="fas fa-table me-1"></i> Open Timetable Grid
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('workload_dashboard') }}" class="btn btn-outline-primary btn-sm shadow-sm">
+                <i class="fas fa-tasks me-1"></i> Workload Allocation
+            </a>
+            <a href="{{ url_for('export_excel') }}" class="btn btn-outline-success btn-sm shadow-sm">
+                <i class="fas fa-file-excel me-1"></i> Export Excel
             </a>
             <a href="{{ url_for('export_pdf') }}" class="btn btn-outline-danger btn-sm shadow-sm">
                 <i class="fas fa-file-pdf me-1"></i> Download PDF
+            </a>
+            <a href="{{ url_for('timetable_master') }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="fas fa-table me-1"></i> Open Timetable Grid
             </a>
         </div>
     </div>
@@ -25,7 +35,7 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold">Faculty</div>
+                        <div class="text-muted small fw-semibold">Faculty Members</div>
                         <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.teachers }}</h3>
                     </div>
                     <div class="stat-icon bg-primary-subtle text-primary">
@@ -39,7 +49,7 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold">Classes</div>
+                        <div class="text-muted small fw-semibold">Cohort Classes</div>
                         <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.classes }}</h3>
                     </div>
                     <div class="stat-icon bg-info-subtle text-info">
@@ -53,7 +63,7 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold">Subjects</div>
+                        <div class="text-muted small fw-semibold">Courses / Subjects</div>
                         <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.subjects }}</h3>
                     </div>
                     <div class="stat-icon bg-success-subtle text-success">
@@ -67,7 +77,7 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold">Rooms / Labs</div>
+                        <div class="text-muted small fw-semibold">Rooms & Labs</div>
                         <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.rooms }}</h3>
                     </div>
                     <div class="stat-icon bg-warning-subtle text-warning">
@@ -81,11 +91,11 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold">Periods</div>
-                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.entries }}</h3>
+                        <div class="text-muted small fw-semibold">Weekly Load</div>
+                        <h3 class="fw-bold text-navy m-0 mt-1">{{ stats.assigned_hours }} <span class="fs-6 text-muted fw-normal">/ 186h</span></h3>
                     </div>
                     <div class="stat-icon bg-secondary-subtle text-secondary">
-                        <i class="fas fa-calendar-check"></i>
+                        <i class="fas fa-business-time"></i>
                     </div>
                 </div>
             </div>
@@ -97,7 +107,7 @@
                     <div>
                         <div class="text-muted small fw-semibold">Clash Status</div>
                         <h3 class="fw-bold m-0 mt-1 {% if stats.conflicts == 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ stats.conflicts }}
+                            {% if stats.conflicts == 0 %}0 Clean{% else %}{{ stats.conflicts }} Clash{% endif %}
                         </h3>
                     </div>
                     <div class="stat-icon {% if stats.conflicts == 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
@@ -115,28 +125,33 @@
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold m-0 text-navy">
-                        <i class="fas fa-layer-group text-primary me-2"></i> Academic Class Schedule (3 Semesters)
+                        <i class="fas fa-layer-group text-primary me-2"></i> Academic Cohorts & Class Schedules
                     </h5>
-                    <a href="{{ url_for('timetable_master') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="{{ url_for('timetable_master') }}" class="btn btn-sm btn-outline-primary">View Master Grid</a>
                 </div>
                 <div class="card-body px-4 pb-4 pt-1">
                     <div class="row g-3">
                         {% for c in classes %}
                         <div class="col-md-4">
-                            <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-direction-column justify-content-between">
+                            <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
                                 <div>
-                                    <div class="badge bg-primary mb-2">{{ c.name }}</div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-primary">{{ c.name }}</span>
+                                        <span class="badge bg-secondary-subtle text-dark border">Sem {{ c.semester }}</span>
+                                    </div>
                                     <h6 class="fw-bold mb-1">{{ c.year_name }}</h6>
-                                    <p class="small text-muted mb-2">Semester {{ c.semester }} &bull; E&TC</p>
+                                    <p class="small text-muted mb-2">{{ c.department or 'E&TC' }} Department</p>
                                     <div class="small text-secondary mb-3">
                                         <i class="fas fa-users text-muted me-1"></i> Batches: 
                                         {% for b in c.batches %}
                                             <span class="badge bg-white text-dark border">{{ b.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Common</span>
                                         {% endfor %}
                                     </div>
                                 </div>
                                 <a href="{{ url_for('timetable_class', class_id=c.id) }}" class="btn btn-sm btn-outline-secondary w-100">
-                                    <i class="fas fa-external-link-alt me-1"></i> View Timetable
+                                    <i class="fas fa-external-link-alt me-1"></i> View Class Timetable
                                 </a>
                             </div>
                         </div>
@@ -160,11 +175,44 @@
                             <span class="d-flex align-items-center gap-2">
                                 <i class="fas fa-edit fs-5"></i>
                                 <span class="text-start">
-                                    <strong class="d-block">Interactive Grid</strong>
-                                    <small class="opacity-75">Click any cell to edit details</small>
+                                    <strong class="d-block">Interactive Timetable Grid</strong>
+                                    <small class="opacity-75">Live edit, move, swap and clash checking</small>
                                 </span>
                             </span>
                             <i class="fas fa-chevron-right"></i>
+                        </a>
+
+                        <a href="{{ url_for('workload_dashboard') }}" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="fas fa-tasks fs-5 text-primary"></i>
+                                <span>
+                                    <strong class="d-block">Manage Workload & Upload Excel</strong>
+                                    <small class="text-muted">186 hrs load, Excel upload, template</small>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+
+                        <a href="{{ url_for('generate_timetable') }}" class="btn btn-outline-info text-dark w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="fas fa-magic fs-5 text-info"></i>
+                                <span>
+                                    <strong class="d-block">Intelligent Auto-Scheduler</strong>
+                                    <small class="text-muted">Balanced Mon-Sat distribution</small>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+
+                        <a href="{{ url_for('conflict_report') }}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="fas fa-shield-alt fs-5 text-danger"></i>
+                                <span>
+                                    <strong class="d-block">Clash & Conflict Auditor</strong>
+                                    <small class="text-muted">{% if stats.conflicts == 0 %}0 conflicts found (Clean){% else %}{{ stats.conflicts }} conflicts detected{% endif %}</small>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-right text-muted"></i>
                         </a>
 
                         <form action="{{ url_for('reset_timetable') }}" method="POST" onsubmit="return confirm('Restore original PDF schedule?');">
@@ -179,30 +227,62 @@
                                 <i class="fas fa-chevron-right text-muted"></i>
                             </button>
                         </form>
-
-                        <a href="{{ url_for('conflict_report') }}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
-                            <span class="d-flex align-items-center gap-2">
-                                <i class="fas fa-shield-alt fs-5 text-danger"></i>
-                                <span>
-                                    <strong class="d-block">Live Clash Auditor</strong>
-                                    <small class="text-muted">{% if stats.conflicts == 0 %}0 conflicts found{% else %}{{ stats.conflicts }} conflicts detected{% endif %}</small>
-                                </span>
-                            </span>
-                            <i class="fas fa-chevron-right text-muted"></i>
-                        </a>
-
-                        <a href="{{ url_for('export_pdf') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
-                            <span class="d-flex align-items-center gap-2">
-                                <i class="fas fa-file-pdf fs-5 text-danger"></i>
-                                <span>
-                                    <strong class="d-block">Export Official PDF</strong>
-                                    <small class="text-muted">Landscape A4 printable report</small>
-                                </span>
-                            </span>
-                            <i class="fas fa-chevron-right text-muted"></i>
-                        </a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intelligent Teacher Workload Distribution & Balance Monitor -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold m-0 text-navy">
+                    <i class="fas fa-balance-scale text-primary me-2"></i> Faculty Workload Distribution Monitor
+                </h5>
+                <span class="small text-muted">Tracking weekly teaching hours, daily caps, and timetable fulfillment across Monday–Saturday</span>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('workload_template') }}" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-download me-1"></i> Excel Template
+                </a>
+                <a href="{{ url_for('workload_dashboard') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-tasks me-1"></i> Manage Workload
+                </a>
+            </div>
+        </div>
+        <div class="card-body px-4 pb-4 pt-1">
+            <div class="row g-3">
+                {% for t in teachers %}
+                {% set assigned = t.total_assigned_workload %}
+                {% set scheduled = t.current_scheduled_hours %}
+                {% set cap = t.max_weekly_hours %}
+                {% set percent = ((scheduled / cap) * 100)|round|int if cap > 0 else 0 %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="p-3 border rounded-3 bg-light-subtle h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary me-1">{{ t.code }}</span>
+                                <strong class="text-navy small">{{ t.name }}</strong>
+                            </div>
+                            <span class="badge {% if scheduled == cap %}bg-success{% elif scheduled > cap %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ scheduled }} / {{ cap }} hrs
+                            </span>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar {% if scheduled > cap %}bg-danger{% elif scheduled == cap %}bg-success{% else %}bg-primary{% endif %}"
+                                 role="progressbar" style="width: {{ [percent, 100]|min }}%;"
+                                 aria-valuenow="{{ scheduled }}" aria-valuemin="0" aria-valuemax="{{ cap }}"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                            <span>Assigned: {{ assigned }}h</span>
+                            <span>Max Daily: {{ t.max_daily_lectures or 3 }}h/day</span>
+                            <span>Off: {{ t.day_off or 'None' }}</span>
+                            <span>Status: {% if scheduled == cap %}<strong class="text-success">Perfect</strong>{% elif scheduled > cap %}<strong class="text-danger">Over</strong>{% else %}<span>{{ cap - scheduled }}h open</span>{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>

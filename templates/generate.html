@@ -1,55 +1,126 @@
 {% extends 'base.html' %}
-{% block title %}Smart Timetable Auto-Generator{% endblock %}
+{% block title %}Smart Timetable Auto-Generator - MGM COE{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
                 <div class="card-header bg-primary text-white py-4 px-4 text-center">
                     <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 55px; height: 55px;">
                         <i class="fas fa-magic fs-4"></i>
                     </div>
-                    <h4 class="fw-bold mb-1">Smart Timetable Generator</h4>
-                    <p class="small text-white-50 mb-0">Constraint Satisfaction & Clash-Free Genetic Engine</p>
+                    <h4 class="fw-bold mb-1">Intelligent Constraint-Based Auto-Scheduler</h4>
+                    <p class="small text-white-50 mb-0">Even Workload Distribution • Zero Clashes • Mon–Sat Optimization</p>
                 </div>
                 <div class="card-body p-4">
-                    <div class="alert alert-warning py-3 px-3 rounded-3 small mb-4">
-                        <i class="fas fa-info-circle me-1"></i> Running this generator will automatically distribute weekly subject hours, assign designated classrooms and labs, and ensure zero faculty overlaps across SY, TY, and BY classes.
+                    <div class="alert alert-info py-3 px-3 rounded-3 small mb-4">
+                        <i class="fas fa-brain me-2 fa-lg text-primary"></i>
+                        <strong>Smart Workload Balancer Active:</strong> Lectures are distributed proportionally across all 6 working days (Monday to Saturday) based on teacher weekly caps (e.g. 12 hrs &rarr; ~2 hrs/day), completely eliminating single-day teacher overload.
                     </div>
 
-                    <h6 class="fw-bold text-navy mb-3">Enforced Hard Constraints:</h6>
-                    <ul class="list-group list-group-flush small mb-4">
-                        <li class="list-group-item d-flex align-items-center gap-2">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <strong>No Teacher Double Booking:</strong> A faculty member cannot be scheduled in two classes simultaneously.
-                        </li>
-                        <li class="list-group-item d-flex align-items-center gap-2">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <strong>No Room / Lab Collision:</strong> Classrooms and specialized laboratories (e.g. CSL, EDCL, ESVL) are assigned to only one class/batch per time slot.
-                        </li>
-                        <li class="list-group-item d-flex align-items-center gap-2">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <strong>Class Timetable Integrity:</strong> A class will not have conflicting lectures at the same time.
-                        </li>
-                        <li class="list-group-item d-flex align-items-center gap-2">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <strong>Batch Parallelism:</strong> Laboratory practicals for batches (S1-S4, T1-T4, B1-B4) run concurrently across designated labs.
-                        </li>
-                    </ul>
+                    <!-- Enforced 12 Scheduling Constraints Accordion / Grid -->
+                    <div class="card border bg-light-subtle rounded-3 mb-4">
+                        <div class="card-body p-3">
+                            <h6 class="fw-bold text-navy mb-2"><i class="fas fa-shield-alt text-success me-2"></i>12 Hard & Soft Constraints Enforced:</h6>
+                            <div class="row g-2 small">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Balanced Weekly Spread:</strong> Teachers lectures distributed evenly across Mon–Sat; never lumped on a single day.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Daily Teacher Lecture Cap:</strong> Strictly respects teacher daily limits (e.g. max 2-3 lectures/day).</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Subject Daily Diversity:</strong> Max 1 theory session per subject per day for each student class.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Non-Consecutive Teacher Slots:</strong> Avoids back-to-back lectures for the same teacher where possible.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>2-Hour Practical Blocks:</strong> Laboratory experiments scheduled in contiguous 2-hour blocks with batch rotation.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Zero Teacher Clashes:</strong> Faculty never scheduled in two classes simultaneously.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Zero Room Collisions:</strong> Dedicated classrooms (F-12, F-02, F-11) and labs are reserved conflict-free.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-check text-success mt-1"></i>
+                                        <div><strong>Break Preservation:</strong> Short recess (12:15-12:30) and lunch break (02:30-03:15) strictly kept free.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <form method="POST" action="{{ url_for('generate_timetable') }}" onsubmit="return confirm('Generate fresh timetable?');">
-                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm">
-                            <i class="fas fa-play me-2"></i> Start Automated Generation Engine
-                        </button>
+                    <!-- Scheduler Options Form -->
+                    <form method="POST" action="{{ url_for('generate_timetable') }}" onsubmit="return confirm('Generate / Regenerate timetable with smart workload distribution?');">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-navy">Scope / Class Target</label>
+                                <select name="class_id" class="form-select">
+                                    <option value="0">All Classes & Cohorts (Full Academic Schedule)</option>
+                                    {% for c in classes %}
+                                    <option value="{{ c.id }}">{{ c.name }} - {{ c.year_name }} (Sem {{ c.semester }})</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">Select an individual division to regenerate only that class.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-navy">Day Filter / Partial Regeneration</label>
+                                <select name="day" class="form-select">
+                                    <option value="All">All Working Days (Monday to Saturday)</option>
+                                    <option value="Monday">Monday Only</option>
+                                    <option value="Tuesday">Tuesday Only</option>
+                                    <option value="Wednesday">Wednesday Only</option>
+                                    <option value="Thursday">Thursday Only</option>
+                                    <option value="Friday">Friday Only</option>
+                                    <option value="Saturday">Saturday Only</option>
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">Regenerate an entire week or fine-tune a single day.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary py-3 fw-bold rounded-3 shadow-sm">
+                                <i class="fas fa-play me-2"></i> Run Intelligent Timetable Generation Engine
+                            </button>
+                        </div>
                     </form>
                 </div>
-                <div class="card-footer bg-light p-3 text-center">
-                    <form action="{{ url_for('reset_timetable') }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-link text-warning text-decoration-none small">
-                            <i class="fas fa-undo me-1"></i> Or restore original MGM College PDF timetable
+                <div class="card-footer bg-light p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <form action="{{ url_for('reset_timetable') }}" method="POST" class="d-inline" onsubmit="return confirm('Restore original MGM College PDF timetable?');">
+                        <button type="submit" class="btn btn-outline-warning text-dark btn-sm">
+                            <i class="fas fa-undo me-1"></i> Restore Original PDF Master Schedule
                         </button>
                     </form>
+                    <a href="{{ url_for('workload_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-tasks me-1"></i> Review Teacher Workloads
+                    </a>
                 </div>
             </div>
         </div>
