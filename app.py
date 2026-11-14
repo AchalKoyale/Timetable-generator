@@ -15,10 +15,12 @@ from pdf_exporter import generate_pdf_timetable
 # Support both Local Development and Serverless Deployment
 IS_SERVERLESS = os.environ.get('VERCEL') or os.environ.get('NETLIFY') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
 
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'smart-timetable-secret-key-2026'
+
 if IS_SERVERLESS:
     db_dir = tempfile.gettempdir()
-    app = Flask(__name__, instance_path=os.path.join(db_dir, 'instance'))
-    app.config['SECRET_KEY'] = 'smart-timetable-secret-key-2026'
+    app.instance_path = os.path.join(db_dir, 'instance')
     db_file = os.path.join(db_dir, 'timetable.db')
     local_db = os.path.join(os.path.dirname(__file__), 'instance', 'timetable.db')
     if not os.path.exists(local_db):
@@ -30,8 +32,6 @@ if IS_SERVERLESS:
             pass
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_file.replace(os.sep, "/")}'
 else:
-    app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'smart-timetable-secret-key-2026'
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///timetable.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
