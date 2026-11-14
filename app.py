@@ -12,13 +12,13 @@ from seed_data import seed_database, load_pdf_timetable_entries, migrate_databas
 from generator import check_all_conflicts, validate_cell_edit, generate_smart_timetable, swap_timetable_entries, move_timetable_entry
 from pdf_exporter import generate_pdf_timetable
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'smart-timetable-secret-key-2026'
-
 # Support both Local Development and Serverless Deployment
-IS_SERVERLESS = os.environ.get('NETLIFY') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+IS_SERVERLESS = os.environ.get('VERCEL') or os.environ.get('NETLIFY') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+
 if IS_SERVERLESS:
     db_dir = tempfile.gettempdir()
+    app = Flask(__name__, instance_path=os.path.join(db_dir, 'instance'))
+    app.config['SECRET_KEY'] = 'smart-timetable-secret-key-2026'
     db_file = os.path.join(db_dir, 'timetable.db')
     local_db = os.path.join(os.path.dirname(__file__), 'instance', 'timetable.db')
     if not os.path.exists(local_db):
@@ -30,6 +30,8 @@ if IS_SERVERLESS:
             pass
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_file.replace(os.sep, "/")}'
 else:
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'smart-timetable-secret-key-2026'
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///timetable.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
