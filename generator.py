@@ -38,16 +38,18 @@ def check_all_conflicts():
                 if e.teacher_id:
                     if e.teacher_id in teacher_seen:
                         other = teacher_seen[e.teacher_id]
-                        t_name = e.teacher.name if e.teacher else f"Teacher #{e.teacher_id}"
-                        c1_name = e.academic_class.name if e.academic_class else "Class 1"
-                        c2_name = other.academic_class.name if other.academic_class else "Class 2"
-                        conflicts.append({
-                            'type': 'Teacher Clash',
-                            'severity': 'danger',
-                            'day': day,
-                            'slot': slot.slot_label,
-                            'description': f"Teacher '{t_name}' is double-booked for '{c1_name}' and '{c2_name}' at {slot.slot_label} on {day}."
-                        })
+                        # Conflicting if assigned to two different classes or two whole-class theory lectures
+                        if e.class_id != other.class_id or (not e.batch_id and not other.batch_id):
+                            t_name = e.teacher.name if e.teacher else f"Teacher #{e.teacher_id}"
+                            c1_name = e.academic_class.name if e.academic_class else "Class 1"
+                            c2_name = other.academic_class.name if other.academic_class else "Class 2"
+                            conflicts.append({
+                                'type': 'Teacher Clash',
+                                'severity': 'danger',
+                                'day': day,
+                                'slot': slot.slot_label,
+                                'description': f"Teacher '{t_name}' is double-booked for '{c1_name}' and '{c2_name}' at {slot.slot_label} on {day}."
+                            })
                     else:
                         teacher_seen[e.teacher_id] = e
 

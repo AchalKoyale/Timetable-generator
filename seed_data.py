@@ -54,20 +54,30 @@ def seed_database():
         admin.set_password('admin123')
         db.session.add(admin)
 
-    # 3. Faculty List (Exact 12 Teachers from the PDF)
+    # Clean up non-ECT classes, subjects, workloads if present (ONLY ECT data as requested)
+    non_ect_classes = AcademicClass.query.filter(~AcademicClass.name.in_(['SY(ECT)', 'TY(ECT)', 'BY(ECT)'])).all()
+    for nec in non_ect_classes:
+        TimetableEntry.query.filter_by(class_id=nec.id).delete()
+        TeacherWorkloadAssignment.query.filter_by(class_id=nec.id).delete()
+        Batch.query.filter_by(class_id=nec.id).delete()
+        Subject.query.filter_by(class_id=nec.id).delete()
+        db.session.delete(nec)
+    db.session.commit()
+
+    # 3. Faculty List (Exact 12 Teachers from the PDF with ECT workloads)
     faculties_data = [
         {"name": "Dr. Mr. S. L. KOTGIRE", "code": "DR.SLK", "designation": "Vice Principal / Associate Professor", "email": "slkotgire@mgmcen.ac.in", "max_hours": 3},
         {"name": "Dr. Mrs. K. P. PAITHANE", "code": "Dr.KPP", "designation": "Professor & Head of Department", "email": "kppaithane@mgmcen.ac.in", "max_hours": 14},
         {"name": "Dr. M. R. BANWASKAR", "code": "Dr.MRB", "designation": "Assistant Professor / NBA Criteria 03", "email": "mrbanwaskar@mgmcen.ac.in", "max_hours": 14},
-        {"name": "Mr. V. S. JADHAV", "code": "VSJ", "designation": "Assistant Professor / Dept. NBA Coordinator", "email": "vsjadhav@mgmcen.ac.in", "max_hours": 19},
+        {"name": "Mr. V. S. JADHAV", "code": "VSJ", "designation": "Assistant Professor / Dept. NBA Coordinator", "email": "vsjadhav@mgmcen.ac.in", "max_hours": 16},
         {"name": "Ms. P. P. KANADKHEDKAR", "code": "PPK", "designation": "Assistant Professor / Class Incharge TY", "email": "ppkanadkhedkar@mgmcen.ac.in", "max_hours": 21},
-        {"name": "Mr. SAYED SHOAIB ANWAR", "code": "SSA", "designation": "Assistant Professor / Time Table Incharge", "email": "ssanwar@mgmcen.ac.in", "max_hours": 20},
-        {"name": "Ms. A. K. SALVE", "code": "AKS", "designation": "Assistant Professor / Dept. Academic Coordinator", "email": "aksalve@mgmcen.ac.in", "max_hours": 21},
+        {"name": "Mr. SAYED SHOAIB ANWAR", "code": "SSA", "designation": "Assistant Professor / Time Table Incharge", "email": "ssanwar@mgmcen.ac.in", "max_hours": 16},
+        {"name": "Ms. A. K. SALVE", "code": "AKS", "designation": "Assistant Professor / Dept. Academic Coordinator", "email": "aksalve@mgmcen.ac.in", "max_hours": 5},
         {"name": "Ms. MAITHILI V. M.", "code": "MVM", "designation": "Assistant Professor / Class Incharge B.Tech", "email": "mvmaithili@mgmcen.ac.in", "max_hours": 20},
-        {"name": "Mr. D. J. TUPTEWAR", "code": "DJT", "designation": "Assistant Professor / NBA Criteria 04", "email": "djtuptewar@mgmcen.ac.in", "max_hours": 21},
-        {"name": "Ms. A. B. DALVI", "code": "ABD", "designation": "Assistant Professor / Girls Hostel Incharge", "email": "abdalvi@mgmcen.ac.in", "max_hours": 21},
-        {"name": "Ms. KUCHAN A. P.", "code": "KAP", "designation": "Assistant Professor", "email": "apkuchan@mgmcen.ac.in", "max_hours": 22},
-        {"name": "Dr. S. S. PATIL", "code": "SSP", "designation": "Assistant Professor (Maths)", "email": "sspatil@mgmcen.ac.in", "max_hours": 16}
+        {"name": "Mr. D. J. TUPTEWAR", "code": "DJT", "designation": "Assistant Professor / NBA Criteria 04", "email": "djtuptewar@mgmcen.ac.in", "max_hours": 17},
+        {"name": "Ms. A. B. DALVI", "code": "ABD", "designation": "Assistant Professor / Girls Hostel Incharge", "email": "abdalvi@mgmcen.ac.in", "max_hours": 5},
+        {"name": "Ms. KUCHAN A. P.", "code": "KAP", "designation": "Assistant Professor", "email": "apkuchan@mgmcen.ac.in", "max_hours": 4},
+        {"name": "Dr. S. S. PATIL", "code": "SSP", "designation": "Assistant Professor (Maths)", "email": "sspatil@mgmcen.ac.in", "max_hours": 4}
     ]
 
     teacher_map = {}
@@ -87,6 +97,7 @@ def seed_database():
             db.session.flush()
         else:
             t.max_weekly_hours = f["max_hours"]
+            t.max_daily_lectures = 3
         teacher_map[t.code] = t
 
     # 4. Rooms and Laboratories from PDF
@@ -114,14 +125,11 @@ def seed_database():
             db.session.flush()
         room_map[rm.name] = rm
 
-    # 5. Classes and Batches (SY, TY, BY, FY, A&R, Mech)
+    # 5. Classes and Batches (ONLY 3 ECT Classes as requested: SY, TY, BY)
     classes_data = [
         {"name": "SY(ECT)", "year_name": "Second Year (NEP 2020)", "semester": 3, "batches": [("S1", "1-20"), ("S2", "21-40"), ("S3", "41-60"), ("S4", "61 Onwards")]},
         {"name": "TY(ECT)", "year_name": "Third Year", "semester": 5, "batches": [("T1", "1-20"), ("T2", "21-40"), ("T3", "41-60"), ("T4", "61 Onwards")]},
-        {"name": "BY(ECT)", "year_name": "Final Year / B.Tech", "semester": 7, "batches": [("B1", "1-20"), ("B2", "21-40"), ("B3", "41-60"), ("B4", "61 Onwards")]},
-        {"name": "FY(MGM)", "year_name": "First Year", "semester": 1, "batches": [("F1", "1-30"), ("F2", "31-60")]},
-        {"name": "SY-A&R", "year_name": "Second Year (A&R)", "semester": 3, "batches": [("AR1", "1-30"), ("AR2", "31-60")]},
-        {"name": "BY-Mech", "year_name": "Final Year (Mechanical)", "semester": 7, "batches": [("M1", "1-30"), ("M2", "31-60")]}
+        {"name": "BY(ECT)", "year_name": "Final Year / B.Tech", "semester": 7, "batches": [("B1", "1-20"), ("B2", "21-40"), ("B3", "41-60"), ("B4", "61 Onwards")]}
     ]
 
     class_map = {}
@@ -213,10 +221,7 @@ def seed_database():
         {"code": "PR-ME", "name": "Microwave Engineering Lab", "type": "Practical", "class": "BY(ECT)", "teacher": "PPK", "room": "F-14A", "hours": 8},
         {"code": "Mentor-Meeting", "name": "Mentor Mentee Meeting", "type": "Meeting", "class": "BY(ECT)", "teacher": "SSA", "room": "F-13", "hours": 2},
 
-        # Other Cross-Department Subjects (FY-MGM, SY-A&R, BY-Mech)
-        {"code": "TH-FY-PPS", "name": "Programming for Problem Solving", "type": "Theory", "class": "FY(MGM)", "teacher": "AKS", "room": "F-12", "hours": 4},
-        {"code": "TH-AR-ADE", "name": "Analog & Digital Electronics", "type": "Theory", "class": "SY-A&R", "teacher": "KAP", "room": "F-13", "hours": 4},
-        {"code": "TH-MECH-IPR", "name": "Intellectual Property Rights", "type": "Theory", "class": "BY-Mech", "teacher": "KAP", "room": "F-13", "hours": 4}
+        # (Cross-department subjects removed as only ECT data is required)
     ]
 
     subject_map = {}
@@ -239,7 +244,7 @@ def seed_database():
             db.session.flush()
         subject_map[s.code] = s
 
-    # 8. Seed Official Teacher Workload Assignments from the New PDF!
+    # 8. Seed Official Teacher Workload Assignments from the New PDF (ONLY ECT)!
     seed_official_workload(class_map, teacher_map, subject_map)
 
     # 9. Seed Authentic Timetable Entries
@@ -247,78 +252,72 @@ def seed_database():
         load_pdf_timetable_entries(class_map, batch_map, teacher_map, room_map, slot_map, subject_map)
 
     db.session.commit()
-    print("Database successfully seeded with complete authentic Workload and Timetable data!")
+    print("Database successfully seeded with complete authentic ECT Workload and Timetable data!")
 
 
-def seed_official_workload(class_map, teacher_map, subject_map):
-    """Populates exact teacher workload assignments from the official MGM COE Workload document."""
-    if TeacherWorkloadAssignment.query.count() > 0:
+def seed_official_workload(class_map, teacher_map, subject_map, force=False):
+    """Populates exact teacher workload assignments from the official MGM COE Workload document (ECT Only)."""
+    if not force and TeacherWorkloadAssignment.query.count() > 0:
         return
 
+    if force:
+        TeacherWorkloadAssignment.query.delete()
+        db.session.commit()
+
     workload_records = [
-        # 1. Dr. S. L. Kotgire (Vice Principal) -> Total: 3 hrs
+        # 1. Dr. S. L. Kotgire (Vice Principal) -> ECT Total: 3 hrs
         {"teacher": "DR.SLK", "class": "SY(ECT)", "subject": "TH-PCC-NT-203", "th": 3, "pr": 0, "notes": "Vice Principal Load"},
 
-        # 2. Dr. Mrs. K. P. Paithane (HOD) -> Total: 14 hrs
+        # 2. Dr. Mrs. K. P. Paithane (HOD) -> ECT Total: 14 hrs
         {"teacher": "Dr.KPP", "class": "SY(ECT)", "subject": "TH-VEC-CoI-231", "th": 2, "pr": 0, "notes": "CoI Theory"},
         {"teacher": "Dr.KPP", "class": "TY(ECT)", "subject": "TH-PPC-DSP", "th": 4, "pr": 0, "notes": "DSP Theory"},
-        {"teacher": "Dr.KPP", "class": "BY(ECT)", "subject": "PR-MProj3", "th": 0, "pr": 8, "notes": "4*2=8 Mini-Proj Lab"},
+        {"teacher": "Dr.KPP", "class": "BY(ECT)", "subject": "PR-MProj3", "th": 0, "pr": 8, "notes": "4*2=8 Major Project-I"},
 
-        # 3. Dr. M. R. Banwaskar -> Total: 14 hrs
+        # 3. Dr. M. R. Banwaskar -> ECT Total: 14 hrs
         {"teacher": "Dr.MRB", "class": "SY(ECT)", "subject": "TH-HSSM-ED-232", "th": 2, "pr": 0, "notes": "ED Theory"},
         {"teacher": "Dr.MRB", "class": "BY(ECT)", "subject": "TH-PEC 4-GA(FOC)", "th": 4, "pr": 0, "notes": "FoC(GA) Theory"},
         {"teacher": "Dr.MRB", "class": "SY(ECT)", "subject": "PR-MProj", "th": 0, "pr": 8, "notes": "4*2=8 Mini-Proj Lab"},
 
-        # 4. Mr. V. S. Jadhav -> Total: 19 hrs
+        # 4. Mr. V. S. Jadhav -> ECT Total: 16 hrs
         {"teacher": "VSJ", "class": "BY(ECT)", "subject": "TH-OEC 4-EWM", "th": 4, "pr": 0, "notes": "EWM Theory"},
-        {"teacher": "VSJ", "class": "SY(ECT)", "subject": "TH-OE-XYZ", "th": 3, "pr": 0, "notes": "OE-AE Theory"},
         {"teacher": "VSJ", "class": "SY(ECT)", "subject": "PR-MProj", "th": 0, "pr": 4, "notes": "4*1=4 Mini-Proj"},
         {"teacher": "VSJ", "class": "BY(ECT)", "subject": "PR-MProj3", "th": 0, "pr": 4, "notes": "4*1=4 Mini-Proj"},
         {"teacher": "VSJ", "class": "TY(ECT)", "subject": "PR-ACL", "th": 0, "pr": 4, "notes": "2*2=4 AC Lab"},
 
-        # 5. Ms. P. P. Kanadkhedkar -> Total: 21 hrs
+        # 5. Ms. P. P. Kanadkhedkar -> ECT Total: 21 hrs
         {"teacher": "PPK", "class": "BY(ECT)", "subject": "PR-ME", "th": 4, "pr": 8, "notes": "ME Theory (4) + 2*4=8 Lab"},
         {"teacher": "PPK", "class": "TY(ECT)", "subject": "TH-PEC-FoC", "th": 3, "pr": 0, "notes": "FoC(Ele) Theory"},
         {"teacher": "PPK", "class": "SY(ECT)", "subject": "PR-MProj", "th": 0, "pr": 4, "notes": "4*1=4 Mini-Proj"},
         {"teacher": "PPK", "class": "TY(ECT)", "subject": "PR-DSPL", "th": 0, "pr": 2, "notes": "2*1=2 DSP Lab"},
 
-        # 6. Mr. Sayed Shoaib Anwar (TT Incharge) -> Total: 20 hrs
+        # 6. Mr. Sayed Shoaib Anwar (TT Incharge) -> ECT Total: 16 hrs
         {"teacher": "SSA", "class": "BY(ECT)", "subject": "TH-OEC3-MC", "th": 4, "pr": 0, "notes": "MC(GB) Theory"},
         {"teacher": "SSA", "class": "TY(ECT)", "subject": "TH-PCC-AC", "th": 3, "pr": 0, "notes": "AC Theory"},
         {"teacher": "SSA", "class": "SY(ECT)", "subject": "TH-PCCL-SL-207", "th": 1, "pr": 8, "notes": "SL Theory (1) + 2*4=8 Lab"},
-        {"teacher": "SSA", "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "th": 4, "pr": 0, "notes": "MDM-IoT Theory"},
 
-        # 7. Ms. A. K. Salve -> Total: 21 hrs
-        {"teacher": "AKS", "class": "FY(MGM)", "subject": "TH-FY-PPS", "th": 4, "pr": 8, "notes": "PPS Theory (4) + 2*4=8 Lab"},
+        # 7. Ms. A. K. Salve -> ECT Total: 5 hrs
         {"teacher": "AKS", "class": "TY(ECT)", "subject": "TH-OE-XYZ", "th": 3, "pr": 0, "notes": "OEB Theory"},
-        {"teacher": "AKS", "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "th": 4, "pr": 0, "notes": "MDM-IoT Theory"},
         {"teacher": "AKS", "class": "TY(ECT)", "subject": "PR-DSPL", "th": 0, "pr": 2, "notes": "2*1=2 DSP Lab"},
 
-        # 8. Ms. V. M. Maithali -> Total: 20 hrs
+        # 8. Ms. V. M. Maithali -> ECT Total: 20 hrs
         {"teacher": "MVM", "class": "TY(ECT)", "subject": "TH-PCC-EWT", "th": 4, "pr": 0, "notes": "EWT Theory"},
         {"teacher": "MVM", "class": "SY(ECT)", "subject": "PR-NT", "th": 0, "pr": 8, "notes": "2*4=8 NT Lab"},
         {"teacher": "MVM", "class": "BY(ECT)", "subject": "TH-HSSMC-EE&FM", "th": 4, "pr": 0, "notes": "EE&FM Theory"},
         {"teacher": "MVM", "class": "TY(ECT)", "subject": "PR-DSPL", "th": 0, "pr": 4, "notes": "2*2=4 DSP Lab"},
 
-        # 9. Mr. D. J. Tuptewar -> Total: 21 hrs
+        # 9. Mr. D. J. Tuptewar -> ECT Total: 17 hrs
         {"teacher": "DJT", "class": "SY(ECT)", "subject": "TH-PCC-EDC-202", "th": 4, "pr": 8, "notes": "EDC Theory (4) + 2*4=8 Lab"},
         {"teacher": "DJT", "class": "TY(ECT)", "subject": "TH-MDM-DSP", "th": 3, "pr": 0, "notes": "DSP(MDM) Theory"},
-        {"teacher": "DJT", "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "th": 4, "pr": 0, "notes": "MDM-IoT Theory"},
         {"teacher": "DJT", "class": "BY(ECT)", "subject": "PR-MProj3", "th": 0, "pr": 2, "notes": "2*1=2 Mini-Proj"},
 
-        # 10. Ms. A. B. Dalvi -> Total: 21 hrs
-        {"teacher": "ABD", "class": "FY(MGM)", "subject": "TH-FY-PPS", "th": 4, "pr": 8, "notes": "PPS Theory (4) + 2*4=8 Lab"},
-        {"teacher": "ABD", "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "th": 4, "pr": 0, "notes": "MDM-IoT Theory"},
+        # 10. Ms. A. B. Dalvi -> ECT Total: 5 hrs
         {"teacher": "ABD", "class": "SY(ECT)", "subject": "TH-OEI-PDE-233", "th": 3, "pr": 0, "notes": "OE-PDE Theory"},
         {"teacher": "ABD", "class": "BY(ECT)", "subject": "PR-MProj3", "th": 0, "pr": 2, "notes": "2*1=2 Mini-Proj"},
 
-        # 11. Ms. Kuchan A. P. -> Total: 22 hrs
-        {"teacher": "KAP", "class": "SY-A&R", "subject": "TH-AR-ADE", "th": 4, "pr": 6, "notes": "A&DE Theory (4) + 2*3=6 Lab"},
-        {"teacher": "KAP", "class": "BY-Mech", "subject": "TH-MECH-IPR", "th": 4, "pr": 0, "notes": "IPR Theory"},
+        # 11. Ms. Kuchan A. P. -> ECT Total: 4 hrs
         {"teacher": "KAP", "class": "TY(ECT)", "subject": "PR-ACL", "th": 0, "pr": 4, "notes": "2*2=4 AC Lab"},
-        {"teacher": "KAP", "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "th": 4, "pr": 0, "notes": "MDM-IoT Theory"},
 
-        # 12. Dr. S. S. Patil (Maths) -> Total: 16 hrs
+        # 12. Dr. S. S. Patil (Maths) -> ECT Total: 4 hrs
         {"teacher": "SSP", "class": "SY(ECT)", "subject": "TH-BSC-EM-III-201", "th": 4, "pr": 0, "notes": "Engineering Maths-III"}
     ]
 
@@ -390,8 +389,8 @@ def load_pdf_timetable_entries(class_map, batch_map, teacher_map, room_map, slot
         {"day": "Wednesday", "slot": 1, "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "teacher": "SSA", "room": "F-13", "type": "Online", "title": "TH-MDM--IoT-Online SSA/AKS/DJT/ABD-(F-13)"},
         {"day": "Wednesday", "slot": 3, "class": "SY(ECT)", "subject": "TH-PCC-NT-203", "teacher": "DR.SLK", "room": "F-12", "type": "Theory", "title": "TH-PCC-NT-203-Dr.SLK (F-12)"},
         {"day": "Wednesday", "slot": 4, "class": "SY(ECT)", "subject": "TH-VEC-CoI-231", "teacher": "Dr.KPP", "room": "F-12", "type": "Theory", "title": "TH-VEC-CoI-231-Dr.KPP (F-12)"},
-        {"day": "Wednesday", "slot": 6, "class": "SY(ECT)", "subject": "TH-OEI-PDE-233", "teacher": "ABD", "room": "F-12", "type": "Theory", "title": "TH-OEI-PDE-233 ABD (F-12)"},
-        {"day": "Wednesday", "slot": 7, "class": "SY(ECT)", "subject": "TH-PCC-EDC-202", "teacher": "DJT", "room": "F-12", "type": "Theory", "title": "TH-PCC-EDC-202-DJT (F-12)"},
+        {"day": "Wednesday", "slot": 6, "class": "SY(ECT)", "subject": "TH-OEI-PDE-233", "teacher": "ABD", "room": "F-13", "type": "Theory", "title": "TH-OEI-PDE-233 ABD (F-13)"},
+        {"day": "Wednesday", "slot": 7, "class": "SY(ECT)", "subject": "TH-PCC-EDC-202", "teacher": "DJT", "room": "F-13", "type": "Theory", "title": "TH-PCC-EDC-202-DJT (F-13)"},
         {"day": "Wednesday", "slot": 9, "class": "SY(ECT)", "batch": "S2", "subject": "PR-NT", "teacher": "MVM", "room": "F-19", "type": "Practical", "title": "PR-S2-NT-F-19(CSL)-MVM", "span": 2},
         {"day": "Wednesday", "slot": 9, "class": "SY(ECT)", "batch": "S4", "subject": "PR-EDC", "teacher": "DJT", "room": "F-18", "type": "Practical", "title": "PR-S4-EDC-F-18(EDCL)-DJT", "span": 2},
         {"day": "Wednesday", "slot": 9, "class": "SY(ECT)", "batch": "S1", "subject": "PR-SL", "teacher": "SSA", "room": "F-20", "type": "Practical", "title": "PR-S1-SL-F-20(ESVL)-SSA", "span": 2},
@@ -405,7 +404,7 @@ def load_pdf_timetable_entries(class_map, batch_map, teacher_map, room_map, slot
         {"day": "Wednesday", "slot": 3, "class": "BY(ECT)", "subject": "TH-OEC 4-EWM", "teacher": "VSJ", "room": "F-13", "type": "Theory", "title": "TH-OEC 4- EWM-VSJ- (F-13)"},
         {"day": "Wednesday", "slot": 4, "class": "BY(ECT)", "subject": "TH-ME-PPC 10", "teacher": "PPK", "room": "F-13", "type": "Theory", "title": "TH-ME-PPC 10- PPK (F-13)"},
         {"day": "Wednesday", "slot": 6, "class": "BY(ECT)", "batch": "B3", "subject": "PR-ME", "teacher": "PPK", "room": "F-14A", "type": "Practical", "title": "PR-B3-ME-F-14A(OC&ML)-PPK", "span": 2},
-        {"day": "Wednesday", "slot": 9, "class": "BY(ECT)", "subject": "Mentor-Meeting", "teacher": "SSA", "room": "F-13", "type": "Meeting", "title": "Mentor Mentee Meeting", "span": 2},
+        {"day": "Wednesday", "slot": 9, "class": "BY(ECT)", "subject": "Mentor-Meeting", "teacher": None, "room": "F-13", "type": "Meeting", "title": "Mentor Mentee Meeting", "span": 2},
 
         # THURSDAY
         {"day": "Thursday", "slot": 1, "class": "SY(ECT)", "subject": "TH-MDM-IoT-Online", "teacher": "SSA", "room": "F-13", "type": "Online", "title": "TH-MDM--IoT-Online SSA/AKS/DJT/ABD-(F-13)"},
@@ -419,7 +418,7 @@ def load_pdf_timetable_entries(class_map, batch_map, teacher_map, room_map, slot
         {"day": "Thursday", "slot": 9, "class": "SY(ECT)", "batch": "S3", "subject": "PR-SL", "teacher": "SSA", "room": "F-20", "type": "Practical", "title": "PR-S3-SL-F-20(ESDL)-SSA", "span": 2},
 
         {"day": "Thursday", "slot": 1, "class": "TY(ECT)", "subject": "TH-MDM-DSP", "teacher": "DJT", "room": "F-12", "type": "Theory", "title": "TH-MDM--DSP-DJT- (F-12)"},
-        {"day": "Thursday", "slot": 3, "class": "TY(ECT)", "subject": "Mentor-Meeting", "teacher": "SSA", "room": "F-12", "type": "Meeting", "title": "Mentor Mentee Meeting", "span": 2},
+        {"day": "Thursday", "slot": 3, "class": "TY(ECT)", "subject": "Mentor-Meeting", "teacher": None, "room": None, "type": "Meeting", "title": "Mentor Mentee Meeting", "span": 2},
         {"day": "Thursday", "slot": 6, "class": "TY(ECT)", "subject": "TH-PEC-FoC", "teacher": "PPK", "room": "F-12", "type": "Theory", "title": "TH-PEC-FoC-PPK (F-12)"},
         {"day": "Thursday", "slot": 7, "class": "TY(ECT)", "subject": "TH-PPC-DSP", "teacher": "Dr.KPP", "room": "F-12", "type": "Theory", "title": "TH-PPC-DSP-Dr.KPP (F-12)"},
         {"day": "Thursday", "slot": 9, "class": "TY(ECT)", "batch": "T4", "subject": "PR-ACL", "teacher": "KAP", "room": "F-19", "type": "Practical", "title": "PR-T4-ACL-F-19(CSL)-KAP", "span": 2},
@@ -448,7 +447,7 @@ def load_pdf_timetable_entries(class_map, batch_map, teacher_map, room_map, slot
         {"day": "Friday", "slot": 3, "class": "BY(ECT)", "batch": "B1", "subject": "PR-ME", "teacher": "PPK", "room": "F-14A", "type": "Practical", "title": "PR-B1-ME-F-14A(OC&ML)-PPK", "span": 2},
         {"day": "Friday", "slot": 3, "class": "BY(ECT)", "batch": "B2", "subject": "PR-MProj3", "teacher": "DJT", "room": "F-17", "type": "Practical", "title": "PR-B2-M.Proj3-F-17(DEML)-DJT", "span": 2},
         {"day": "Friday", "slot": 3, "class": "BY(ECT)", "batch": "B4", "subject": "PR-MProj3", "teacher": "VSJ", "room": "Lab 14A", "type": "Practical", "title": "PR-B4-M.Proj3-14A(PCB&SL)-VSJ", "span": 2},
-        {"day": "Friday", "slot": 6, "class": "BY(ECT)", "subject": "TH-OEC 4-EWM", "teacher": "VSJ", "room": "F-13", "type": "Theory", "title": "TH-OEC 4- EWM-VSJ- (F-13)"},
+        {"day": "Friday", "slot": 6, "class": "BY(ECT)", "subject": "TH-OEC 4-EWM", "teacher": "VSJ", "room": "F-12", "type": "Theory", "title": "TH-OEC 4- EWM-VSJ- (F-12)"},
         {"day": "Friday", "slot": 7, "class": "BY(ECT)", "subject": "TH-HSSMC-EE&FM", "teacher": "MVM", "room": "F-12", "type": "Theory", "title": "TH-HSSMC-EE&FM-MVM (F-12)"},
         {"day": "Friday", "slot": 9, "class": "BY(ECT)", "subject": "TH-PEC 4-GA(FOC)", "teacher": "Dr.MRB", "room": "F-13", "type": "Theory", "title": "TH-PEC 4- GA(FOC)-Dr.MRB- (F-13)"},
         {"day": "Friday", "slot": 10, "class": "BY(ECT)", "subject": "TH-ME-PPC 10", "teacher": "PPK", "room": "F-13", "type": "Theory", "title": "TH-ME-PPC 10- PPK (F-13)"},
@@ -465,8 +464,8 @@ def load_pdf_timetable_entries(class_map, batch_map, teacher_map, room_map, slot
         {"day": "Saturday", "slot": 1, "class": "TY(ECT)", "subject": "TH-MDM-DSP", "teacher": "DJT", "room": "F-12", "type": "Theory", "title": "TH-MDM--DSP-DJT- (F-12)"},
         {"day": "Saturday", "slot": 3, "class": "TY(ECT)", "subject": "TH-OE-XYZ", "teacher": "AKS", "room": "F-13", "type": "Theory", "title": "TH-OE-XYZ-AKS- (F-13)"},
         {"day": "Saturday", "slot": 4, "class": "TY(ECT)", "subject": "TH-PCC-EWT", "teacher": "MVM", "room": "F-13", "type": "Theory", "title": "TH-PCC-EWT-MVM- (F-13)"},
-        {"day": "Saturday", "slot": 6, "class": "TY(ECT)", "subject": "Mentor-Meeting", "teacher": "SSA", "room": "F-13", "type": "Meeting", "title": "Mentor Mentee Meeting", "span": 2},
-        {"day": "Saturday", "slot": 9, "class": "TY(ECT)", "batch": "T4", "subject": "PR-DSPL", "teacher": "MVM", "room": "F-14B", "type": "Practical", "title": "PR-T4-DSPL-F-14B (CP&CL)-MVM", "span": 2},
+        {"day": "Saturday", "slot": 6, "class": "TY(ECT)", "batch": "T4", "subject": "PR-DSPL", "teacher": "MVM", "room": "F-14B", "type": "Practical", "title": "PR-T4-DSPL-F-14B (CP&CL)-MVM", "span": 2},
+        {"day": "Saturday", "slot": 9, "class": "TY(ECT)", "subject": "Mentor-Meeting", "teacher": None, "room": "F-13", "type": "Meeting", "title": "Mentor Mentee Meeting", "span": 2},
 
         {"day": "Saturday", "slot": 3, "class": "BY(ECT)", "batch": "B1", "subject": "PR-MProj3", "teacher": "VSJ", "room": "F-14B", "type": "Practical", "title": "PR-B1-M.Proj3-14B(CP&CL)-VSJ", "span": 2},
         {"day": "Saturday", "slot": 6, "class": "BY(ECT)", "subject": "TH-PEC 4-GA(FOC)", "teacher": "Dr.MRB", "room": "F-13", "type": "Theory", "title": "TH-PEC 4- GA(FOC)-Dr.MRB (F-13)"},
